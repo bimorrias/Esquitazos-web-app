@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esquitazos - Pedidos a Domicilio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GOOGLE FONTS: LONDRINA SOLID BLACK -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Londrina Solid"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: { 50: '#fdf8f6', 500: '#ea580c', 600: '#c2410c', 700: '#9a3412' },
+                        cafe: { 800: '#734832', 900: '#5a2d1b', 700: '#8c583f' },
+                        crema: { 50: '#fcf8f2', 100: '#f4efe6', 200: '#e6dccb' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- ANIMACIONES CSS SUAVES Y FLUIDAS -->
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-pop-in {
+            animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        button {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        /* ESTILO PARA EL LIENZO COMPLETO DE FONDO EN EL TICKET DE REVISIÓN */
+        #contenidoRevision {
+            background: linear-gradient(rgba(90, 45, 27, 0.82), rgba(90, 45, 27, 0.82)), url('img/esquitazo_mandil.webp');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body class="bg-[#5a2d1b] text-crema-100 font-sans antialiased pb-32 tracking-wide">
+
+    <!-- HEADER / BANNER DE IMAGEN -->
+    <header id="topApp" class="bg-[#5a2d1b] shadow-md py-2 px-4 text-center sticky top-0 z-50 border-b border-cafe-700">
+        <div class="max-w-xl mx-auto">
+            <img src="img/banner_header.webp" alt="Esquitazos" class="w-full h-auto rounded-xl shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div style="display:none;" class="bg-brand-600 text-white py-3 px-4 rounded-xl font-black text-2xl">
+                ESQUITAZOS - San Luis de la Paz
+            </div>
+        </div>
+    </header>
+
+    <!-- BARRA DE ENVÍO GRATIS STICKY -->
+    <div class="sticky top-[69px] z-40 bg-[#5a2d1b]/95 backdrop-blur-md shadow-sm border-b border-cafe-700 px-4 py-3 transition-all">
+        <div class="max-w-xl mx-auto">
+            <div class="p-3 bg-cafe-800 border border-cafe-700 rounded-2xl text-center shadow-md">
+                <p id="textoEnvioGratis" class="text-sm font-bold text-amber-300 tracking-wider">¡Agrega $220 para envío gratis!</p>
+                <div class="w-full bg-cafe-900 h-3 rounded-full mt-2 overflow-hidden border border-cafe-700 shadow-inner p-0.5">
+                    <div id="barraProgreso" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-0 rounded-full transition-all duration-700 ease-out shadow-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-xl mx-auto p-4 space-y-6">
+
+        <!-- 1. ESCOGE TUS ESQUITES -->
+        <section class="space-y-4">
+            <div class="text-center space-y-1 px-1">
+                <h2 class="text-2xl font-black text-white tracking-wide">
+                    Escoge tus Esquites
+                </h2>
+                <p id="instruccionMenu" class="text-xs font-semibold text-orange-200 tracking-wider">Toca cualquier tarjeta para comenzar a armar tu pedido</p>
+            </div>
+
+            <div id="contenedorSabores" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+        </section>
+
+        <!-- PEDIDO Y RESUMEN -->
+        <section class="bg-cafe-800 p-5 rounded-2xl shadow-lg border border-cafe-700 space-y-4 text-white">
+            <h2 class="text-xl font-black tracking-wide">
+                🛒 Tu Pedido
+            </h2>
+
+            <div id="listaPedido" class="divide-y divide-cafe-700 empty:text-center empty:text-gray-400 empty:py-6 empty:content-['Tu_pedido_está_vacío'] font-medium text-sm">
+                <!-- Items dinámicos -->
+            </div>
+
+            <div class="border-t border-cafe-700 pt-3 space-y-1.5 text-base font-medium">
+                <div class="flex justify-between text-gray-300">
+                    <span>Subtotal:</span>
+                    <span id="subtotalTxt">$0</span>
+                </div>
+                <div class="flex justify-between text-gray-300">
+                    <span>Envío:</span>
+                    <span id="envioTxt">$15</span>
+                </div>
+                <div class="flex justify-between font-black text-xl pt-1 border-t border-cafe-700 text-orange-300">
+                    <span>Total a Pagar:</span>
+                    <span id="totalTxt">$15</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. DATOS DE ENTREGA Y CONTACTO -->
+        <section id="seccionDatosEntrega" class="bg-cafe-800 p-5 rounded-2xl shadow-lg border border-cafe-700 space-y-4 text-white">
+            <h2 class="text-xl font-black tracking-wide">
+                📍 Datos de Entrega y Contacto
+            </h2>
+            
+            <div>
+                <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Nombre</label>
+                <input type="text" id="nombreCliente" autocomplete="name" placeholder="Ej. Juan Pérez" class="w-full px-4 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm transition text-white placeholder-gray-500 font-sans font-normal">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Calle con Número</label>
+                    <input type="text" id="calleNumero" autocomplete="address-line1" placeholder="Ej. Hidalgo #12" class="w-full px-4 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm transition text-white placeholder-gray-500 font-sans font-normal">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Colonia</label>
+                    <input type="text" id="coloniaCliente" autocomplete="address-level2" placeholder="Ej. Vicente Guerrero" class="w-full px-4 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm transition text-white placeholder-gray-500 font-sans font-normal">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Referencias de la casa</label>
+                <input type="text" id="referenciasCliente" autocomplete="off" placeholder="Ej. Casa verde, portón negro, frente a tiendita" class="w-full px-4 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm transition text-white placeholder-gray-500 font-sans font-normal">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Número de Teléfono (WhatsApp)</label>
+                <input type="tel" id="telefonoCliente" autocomplete="tel" placeholder="Ej. 4681234567" class="w-full px-4 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm transition text-white placeholder-gray-500 font-sans font-normal">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-orange-300 uppercase tracking-wider mb-1">Notas especiales (Opcional)</label>
+                <input type="text" id="notaCliente" autocomplete="off" maxlength="80" placeholder="Ej. Si no hay huesito de espinazo, avísenme" class="w-full px-3 py-2.5 rounded-xl border border-cafe-700 bg-cafe-900 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none transition text-white placeholder-gray-500 font-sans font-normal">
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTÓN FLOTANTE DE ENVIAR -->
+    <div class="fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
+        <div class="max-w-xl mx-auto">
+            <button type="button" onclick="abrirModalRevision()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-lg tracking-wider">
+                <span>📱</span> Revisar Pedido y Enviar por WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE REVISIÓN FINAL -->
+    <div id="modalRevision" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-cafe-800 text-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-pop-in border border-cafe-700">
+            <div class="flex justify-between items-center border-b border-cafe-700 pb-3">
+                <h3 class="text-xl font-black tracking-wide">🔍 Confirma tu Pedido</h3>
+                <button onclick="cerrarModalRevision()" class="text-gray-300 hover:text-white font-bold text-2xl">&times;</button>
+            </div>
+            <p class="text-xs text-orange-200 font-medium tracking-wider">Revisa que tus datos y opciones sean correctas. Al confirmar, se abrirá WhatsApp con tu ticket oficial.</p>
+            
+            <div id="contenidoRevision" class="bg-cafe-900 p-4 rounded-2xl text-xs space-y-2 border border-cafe-700 font-sans text-crema-100 whitespace-pre-line">
+                <!-- Resumen generado -->
+            </div>
+
+            <div class="p-3 bg-amber-950/60 border border-amber-600/40 rounded-xl text-amber-200 text-xs font-medium tracking-wider">
+                ⚠️ <b>Importante:</b> No le muevas al mensaje para que se procese más rápido el pedido.
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button type="button" onclick="cerrarModalRevision()" class="py-3 px-4 rounded-xl border border-cafe-700 font-bold text-sm text-gray-300 hover:bg-cafe-900 transition tracking-wider">Regresar</button>
+                <button type="button" onclick="enviarWhatsAppReal()" class="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition tracking-wider">Enviar a WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE LÓGICA -->
+    <script>
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+        const estaAbierto = true;
+        let pedido = [];
+        const COSTO_ENVIO = 15;
+        const UMBRAL_ENVIO_GRATIS = 220;
+
+        const diaActual = new Date().getDay();
+        const tuetanoDisponible = (diaActual === 5 || diaActual === 6 || diaActual === 0);
+
+        const saboresData = [
+            { id: 'mantequilla', nombre: 'Mantequilla y Epazote', med: 55, grande: 90, img: 'img/mantequilla.webp', disponible: true },
+            { id: 'espinazo', nombre: 'Espinazo', med: 65, grande: 100, img: 'img/espinazo.webp', disponible: true },
+            { id: 'camaron', nombre: 'Camarón', med: 75, grande: 120, img: 'img/camaron.webp', disponible: true },
+            { id: 'tuetano', nombre: 'Tuétano', med: 80, grande: 130, img: 'img/tuetano.webp', disponible: tuetanoDisponible, notaDisponibilidad: 'Disponible Vie, Sáb y Dom' }
+        ];
+
+        let saborAbierto = null; 
+        
+        let seleccionesActuales = {
+            mantequilla: { tam: null, panela: true, molido: true, quesosListos: false, tipoChili: null, nivelPica: null },
+            espinazo: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null, huesito: false },
+            camaron: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null },
+            tuetano: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null }
+        };
+
+        function botonImagen(imgSrc, fallbackText, onClickAttr, isActive = false) {
+            return `
+                <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98] ${isActive ? 'ring-4 ring-orange-500 rounded-2xl' : ''}">
+                    <img src="${imgSrc}" alt="${fallbackText}" class="w-full h-auto rounded-2xl shadow-md hover:scale-[1.005]" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display:none;" class="py-3 px-4 rounded-xl border text-sm font-bold bg-cafe-900 border-cafe-700 text-white ${isActive ? 'bg-orange-600 border-orange-400' : 'hover:bg-cafe-800'}">
+                        ${fallbackText}
+                    </div>
+                </button>
+            `;
+        }
+
+        function renderizarSabores() {
+            const contenedor = document.getElementById('contenedorSabores');
+            const instruccion = document.getElementById('instruccionMenu');
+            let html = '';
+
+            if (saborAbierto) {
+                instruccion.innerText = "Configura tu esquite paso a paso:";
+            } else {
+                instruccion.innerText = "Toca cualquier tarjeta para comenzar a armar tu pedido";
+            }
+
+            saboresData.forEach(s => {
+                const isOpen = saborAbierto === s.id;
+                if (saborAbierto && !isOpen) return; 
+
+                if (!s.disponible) {
+                    html += `
+                        <div class="relative rounded-2xl overflow-hidden opacity-60 cursor-not-allowed shadow-md col-span-1">
+                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover rounded-2xl grayscale" onerror="this.src='img/${s.id}.png'">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center p-2 text-center">
+                                <span class="bg-gray-900/90 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg border border-amber-500/30">
+                                    🔒 ${s.notaDisponibilidad}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const claseColumna = isOpen ? 'col-span-full' : 'col-span-1';
+                const sel = seleccionesActuales[s.id];
+
+                html += `
+                    <div class="bg-cafe-900 border-2 border-cafe-700 rounded-2xl overflow-hidden shadow-lg text-white transition-all duration-300 ${claseColumna}">
+                        <!-- TARJETA PRINCIPAL -->
+                        <div onclick="${isOpen ? '' : `abrirSabor('${s.id}')`}" class="${isOpen ? 'cursor-default' : 'cursor-pointer transform transition hover:scale-[1.01] active:scale-[0.99]'} relative overflow-hidden rounded-2xl group">
+                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover rounded-2xl">
+                            ${!isOpen ? `
+                                <div class="absolute top-3 right-3 z-10">
+                                    <span class="bg-orange-600 hover:bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg border border-orange-400/50 flex items-center gap-1 animate-pulse">
+                                        <span>👆</span> Toca para armar
+                                    </span>
+                                </div>
+                            ` : ''}
+                            ${isOpen ? `
+                                <div class="absolute top-3 right-3">
+                                    <button type="button" onclick="cerrarSabor()" class="text-xs bg-black/70 hover:bg-black text-orange-200 px-3 py-1.5 rounded-xl font-bold transition backdrop-blur-sm border border-orange-500/30 shadow-lg">
+                                        ✕ Cambiar Sabor
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- WIZARD ACUMULATIVO EN FILA -->
+                        ${isOpen ? `
+                            <div class="p-5 bg-cafe-800 border-t border-cafe-700 space-y-4 animate-fade-in">
+                                ${s.id === 'mantequilla' ? renderizarMantequilla(sel) : renderizarOtrosSabores(s.id, sel, s)}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            contenedor.innerHTML = html;
+        }
+
+        function abrirSabor(id) {
+            saborAbierto = id;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function cerrarSabor() {
+            saborAbierto = null;
+            renderizarSabores();
+        }
+
+        function autoScrollActiveStep() {
+            setTimeout(() => {
+                const el = document.getElementById('paso-activo');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 150);
+        }
+
+        // FUNCIONES DE MANTEQUILLA
+        function seleccionarTamano(id, tam) {
+            seleccionesActuales[id].tam = tam;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function toggleQuesoMantequilla(id, queso) {
+            seleccionesActuales[id][queso] = !seleccionesActuales[id][queso];
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function confirmarQuesosMantequilla(id) {
+            seleccionesActuales[id].quesosListos = true;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function seleccionarTipoChiliMantequilla(tipo) {
+            let sel = seleccionesActuales['mantequilla'];
+            sel.tipoChili = tipo;
+            if (tipo !== 'pica') {
+                sel.nivelPica = (tipo === 'no_pica' ? 'Del que no pica' : 'Sin chilito');
+            } else {
+                sel.nivelPica = null;
+            }
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function seleccionarNivelPicaMantequilla(nivel) {
+            seleccionesActuales['mantequilla'].nivelPica = nivel;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        // FUNCIONES DE OTROS SABORES
+        function seleccionarTieneLimon(id, val) {
+            let sel = seleccionesActuales[id];
+            sel.tieneLimon = val;
+            if (val === 'no') sel.limon = 'Sin limón';
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function seleccionarLimon(id, lim) {
+            seleccionesActuales[id].limon = lim;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function seleccionarTieneChili(id, val) {
+            let sel = seleccionesActuales[id];
+            sel.tieneChili = val;
+            if (val === 'no') sel.chili = 'Sin chile';
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function seleccionarNivelChile(id, nivel) {
+            seleccionesActuales[id].chili = nivel;
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        function toggleHuesitoEspinazo(id) {
+            seleccionesActuales[id].huesito = !seleccionesActuales[id].huesito;
+            renderizarSabores();
+        }
+
+        // ATAJO: TODO APARTE
+        function aplicarTodoAparte(id) {
+            let sel = seleccionesActuales[id];
+            sel.tieneLimon = 'si';
+            sel.limon = 'Limón aparte';
+            sel.tieneChili = 'si';
+            sel.chili = 'Chile aparte';
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        // REINICIAR PASO AL CAMBIAR
+        function reiniciarPaso(id, nivel) {
+            let sel = seleccionesActuales[id];
+            if (nivel === 1) {
+                sel.tam = null;
+                if (id === 'mantequilla') {
+                    sel.quesosListos = false;
+                    sel.tipoChili = null;
+                    sel.nivelPica = null;
+                } else {
+                    sel.tieneLimon = null;
+                    sel.limon = null;
+                    sel.tieneChili = null;
+                    sel.chili = null;
+                    sel.huesito = false;
+                }
+            } else if (nivel === 2) {
+                if (id === 'mantequilla') {
+                    sel.quesosListos = false;
+                    sel.tipoChili = null;
+                    sel.nivelPica = null;
+                } else {
+                    sel.tieneLimon = null;
+                    sel.limon = null;
+                    sel.tieneChili = null;
+                    sel.chili = null;
+                }
+            } else if (nivel === 3) {
+                if (id === 'mantequilla') {
+                    sel.tipoChili = null;
+                    sel.nivelPica = null;
+                } else {
+                    sel.tieneChili = null;
+                    sel.chili = null;
+                }
+            } else if (nivel === 4) {
+                if (id === 'mantequilla') sel.nivelPica = null;
+                else sel.chili = null;
+            }
+            renderizarSabores();
+            autoScrollActiveStep();
+        }
+
+        // RENDERIZADO ACUMULATIVO MANTEQUILLA
+        function renderizarMantequilla(sel) {
+            let html = '';
+
+            // 1. TAMAÑO
+            if (!sel.tam) {
+                html += `<div id="paso-activo" class="space-y-2"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${botonImagen('img/btn_mediano.webp', 'Mediano ($55)', `seleccionarTamano('mantequilla', 'med')`)}
+                        ${botonImagen('img/btn_grande.webp', 'Grande ($90)', `seleccionarTamano('mantequilla', 'grande')`)}
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="space-y-2"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Tamaño: <b>${sel.tam === 'med' ? 'Mediano ($55)' : 'Grande ($90)'}</b></span>
+                        <button type="button" onclick="reiniciarPaso('mantequilla', 1)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (!sel.tam) return html;
+
+            // 2. QUESOS
+            if (!sel.quesosListos) {
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${botonImagen('img/btn_queso_panela.webp', sel.panela ? '✓ Queso Panela' : '+ Queso Panela', `toggleQuesoMantequilla('mantequilla', 'panela')`, sel.panela)}
+                        ${botonImagen('img/btn_queso_molido.webp', sel.molido ? '✓ Queso Molido' : '+ Queso Molido', `toggleQuesoMantequilla('mantequilla', 'molido')`, sel.molido)}
+                    </div>
+                    <button type="button" onclick="confirmarQuesosMantequilla('mantequilla')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-2">
+                        Continuar ➔
+                    </button>
+                </div>`;
+            } else {
+                let qArr = [];
+                if (sel.panela) qArr.push('Queso Panela');
+                if (sel.molido) qArr.push('Queso Molido');
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos:</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Quesos: <b>${qArr.length > 0 ? qArr.join(' y ') : 'Sin queso'}</b></span>
+                        <button type="button" onclick="reiniciarPaso('mantequilla', 2)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (!sel.quesosListos) return html;
+
+            // 3. CHILE
+            if (!sel.tipoChili) {
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        ${botonImagen('img/btn_del_que_pica.webp', 'Del que pica', `seleccionarTipoChiliMantequilla('pica')`)}
+                        ${botonImagen('img/btn_del_que_no_pica.webp', 'Del que no pica', `seleccionarTipoChiliMantequilla('no_pica')`)}
+                        ${botonImagen('img/btn_sin_chilito.webp', 'Sin chilito', `seleccionarTipoChiliMantequilla('sin')`)}
+                    </div>
+                </div>`;
+            } else {
+                let txtChili = sel.tipoChili === 'pica' ? 'Del que pica' : (sel.tipoChili === 'no_pica' ? 'Del que no pica' : 'Sin chilito');
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Chile: <b>${txtChili}</b></span>
+                        <button type="button" onclick="reiniciarPaso('mantequilla', 3)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (!sel.tipoChili) return html;
+
+            // 4. NIVEL DE PICANTE
+            if (sel.tipoChili === 'pica') {
+                if (!sel.nivelPica) {
+                    html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            ${botonImagen('img/btn_picosito.webp', 'Picosito (Chile)', `seleccionarNivelPicaMantequilla('Picosito')`)}
+                            ${botonImagen('img/btn_picoson.webp', 'Picosón (Chile)', `seleccionarNivelPicaMantequilla('Picosón')`)}
+                            ${botonImagen('img/btn_picosote.webp', 'Picosote (Chile)', `seleccionarNivelPicaMantequilla('Picosote')`)}
+                        </div>
+                    </div>`;
+                } else {
+                    html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
+                        <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                            <span>✓ Nivel: <b>${sel.nivelPica}</b></span>
+                            <button type="button" onclick="reiniciarPaso('mantequilla', 4)" class="text-orange-300 underline font-bold">Cambiar</button>
+                        </div>
+                    </div>`;
+                }
+
+                if (!sel.nivelPica) return html;
+            }
+
+            // 5. BOTÓN AGREGAR AL PEDIDO
+            html += `<div id="paso-activo" class="pt-3 border-t border-cafe-700 animate-fade-in">
+                <button type="button" onclick="agregarItem('mantequilla')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
+                    <span>🛒</span> ¡Agregar al Pedido!
+                </button>
+            </div>`;
+
+            return html;
+        }
+
+        // RENDERIZADO ACUMULATIVO OTROS SABORES
+        function renderizarOtrosSabores(id, sel, s) {
+            let html = '';
+
+            // 1. TAMAÑO
+            if (!sel.tam) {
+                html += `<div id="paso-activo" class="space-y-2"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${botonImagen('img/btn_mediano.webp', `Mediano ($${s.med})`, `seleccionarTamano('${id}', 'med')`)}
+                        ${botonImagen('img/btn_grande.webp', `Grande ($${s.grande})`, `seleccionarTamano('${id}', 'grande')`)}
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="space-y-2"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Tamaño: <b>${sel.tam === 'med' ? `Mediano ($${s.med})` : `Grande ($${s.grande})`}</b></span>
+                        <button type="button" onclick="reiniciarPaso('${id}', 1)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (!sel.tam) return html;
+
+            // BOTÓN DE ATAJO: "TODO APARTE"
+            if (sel.tieneLimon === null && sel.tieneChili === null) {
+                html += `<div class="pt-2 animate-fade-in">
+                    <button type="button" onclick="aplicarTodoAparte('${id}')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-2 animate-pulse border border-orange-400/50">
+                        <span>⚡</span> Todo aparte
+                    </button>
+                </div>`;
+            }
+
+            // 2. LIMÓN
+            const limonListo = (sel.tieneLimon === 'no') || (sel.tieneLimon === 'si' && sel.limon);
+            if (sel.tieneLimon === null) {
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${botonImagen('img/btn_con_limon.webp', 'Sí lleva limón', `seleccionarTieneLimon('${id}', 'si')`)}
+                        ${botonImagen('img/btn_sin_limon.webp', 'Sin limón', `seleccionarTieneLimon('${id}', 'no')`)}
+                    </div>
+                </div>`;
+            } else if (sel.tieneLimon === 'si' && !sel.limon) {
+                const opcionesLimon = [
+                    { text: 'Con limón', img: 'img/btn_limon_normal.webp' },
+                    { text: 'Limón extra', img: 'img/btn_limon_extra.webp' },
+                    { text: 'Limón aparte', img: 'img/btn_limon_aparte.webp' }
+                ];
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">🍋 ¿Cómo quieres el limón?</label>
+                    <div class="grid grid-cols-3 gap-2">`;
+                opcionesLimon.forEach(opt => {
+                    html += botonImagen(opt.img, opt.text, `seleccionarLimon('${id}', '${opt.text}')`);
+                });
+                html += `</div></div>`;
+            } else {
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Limón: <b>${sel.limon}</b></span>
+                        <button type="button" onclick="reiniciarPaso('${id}', 2)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (!limonListo) return html;
+
+            // 3. CHILE
+            if (sel.tieneChili === null) {
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${botonImagen('img/btn_con_chile.webp', 'Sí lleva chile', `seleccionarTieneChili('${id}', 'si')`)}
+                        ${botonImagen('img/btn_sin_chile.webp', 'Sin chile', `seleccionarTieneChili('${id}', 'no')`)}
+                    </div>
+                </div>`;
+            } else {
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                        <span>✓ Chile: <b>${sel.tieneChili === 'si' ? (sel.chili || 'Con chile') : 'Sin chile'}</b></span>
+                        <button type="button" onclick="reiniciarPaso('${id}', 3)" class="text-orange-300 underline font-bold">Cambiar</button>
+                    </div>
+                </div>`;
+            }
+
+            if (sel.tieneChili === null) return html;
+
+            // 4. NIVEL DE CHILE
+            if (sel.tieneChili === 'si') {
+                if (!sel.chili) {
+                    const opcionesChile = [
+                        { text: 'Picosito', img: 'img/btn_picosito.webp' },
+                        { text: 'Picosón', img: 'img/btn_picoson.webp' },
+                        { text: 'Picosote', img: 'img/btn_picosote.webp' },
+                        { text: 'Chile aparte', img: 'img/btn_chile_aparte.webp' }
+                    ];
+                    html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">`;
+                    opcionesChile.forEach(opt => {
+                        html += botonImagen(opt.img, opt.text, `seleccionarNivelChile('${id}', '${opt.text}')`);
+                    });
+                    html += `</div></div>`;
+                } else {
+                    html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
+                        <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-xs">
+                            <span>✓ Nivel: <b>${sel.chili}</b></span>
+                            <button type="button" onclick="reiniciarPaso('${id}', 4)" class="text-orange-300 underline font-bold">Cambiar</button>
+                        </div>
+                    </div>`;
+                }
+
+                if (!sel.chili) return html;
+            }
+
+            // 5. HUESITO (SOLO ESPINAZO GRANDE)
+            if (id === 'espinazo' && sel.tam === 'grande') {
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-xs font-bold text-orange-300 uppercase tracking-wider">5️⃣ Extra opcional:</label>
+                    <button type="button" onclick="toggleHuesitoEspinazo('${id}')" class="w-full py-3 px-3 rounded-xl text-xs font-bold border ${sel.huesito ? 'bg-amber-600 text-white border-amber-500 shadow' : 'bg-cafe-900 text-amber-300 border-cafe-700'}">
+                        ${sel.huesito ? '🦴 Huesito de espinazo agregado' : '+ Agregar huesito de espinazo (Sujeto a disponibilidad)'}
+                    </button>
+                </div>`;
+            }
+
+            // 6. BOTÓN AGREGAR AL PEDIDO
+            html += `<div id="paso-activo" class="pt-3 border-t border-cafe-700 animate-fade-in">
+                <button type="button" onclick="agregarItem('${id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg text-sm flex items-center justify-center gap-2">
+                    <span>🛒</span> ¡Agregar al Pedido!
+                </button>
+            </div>`;
+
+            return html;
+        }
+
+        function agregarItem(id) {
+            const saborObj = saboresData.find(s => s.id === id);
+            const sel = seleccionesActuales[id];
+            const tam = sel.tam;
+            const precio = tam === 'grande' ? saborObj.grande : saborObj.med;
+            let detalles = '';
+
+            if (id === 'mantequilla') {
+                let quesos = [];
+                if (sel.panela) quesos.push('Queso Panela');
+                if (sel.molido) quesos.push('Queso Molido');
+                let chiliText = sel.nivelPica || 'Sin chilito';
+                detalles = `${chiliText} (${quesos.join(' y ')})`;
+            } else {
+                let limonText = sel.limon || 'Sin limón';
+                let chiliText = sel.tieneChili === 'si' ? (sel.chili || '') : 'Sin chile';
+                detalles = `${limonText}, ${chiliText}`;
+                if (id === 'espinazo' && tam === 'grande' && sel.huesito) {
+                    detalles += ' + Huesito de espinazo';
+                }
+            }
+
+            pedido.push({
+                sabor: saborObj.nombre,
+                tamano: tam === 'med' ? 'Mediano' : 'Grande',
+                precio: precio,
+                detalles: detalles
+            });
+
+            if (id === 'mantequilla') {
+                seleccionesActuales[id] = { tam: null, panela: true, molido: true, quesosListos: false, tipoChili: null, nivelPica: null };
+            } else {
+                seleccionesActuales[id] = { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null, huesito: false };
+            }
+
+            saborAbierto = null;
+            renderizarSabores();
+            renderizarPedido();
+
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        }
+
+        function eliminarItem(index) {
+            pedido.splice(index, 1);
+            renderizarPedido();
+        }
+
+        function renderizarPedido() {
+            const lista = document.getElementById('listaPedido');
+            if (pedido.length === 0) {
+                lista.innerHTML = '';
+                actualizarTotales(0);
+                return;
+            }
+
+            let html = '';
+            let subtotal = 0;
+
+            pedido.forEach((item, idx) => {
+                subtotal += item.precio;
+                html += `
+                    <div class="py-3 flex justify-between items-start text-sm animate-fade-in font-sans font-medium">
+                        <div>
+                            <p class="font-bold text-white text-base">#${idx + 1} ${item.sabor} (${item.tamano})</p>
+                            <p class="text-xs text-orange-200">${item.detalles}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-orange-300 text-base">$${item.precio}</span>
+                            <button onclick="eliminarItem(${idx})" class="text-red-400 hover:text-red-600 font-bold text-sm p-1">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            lista.innerHTML = html;
+            actualizarTotales(subtotal);
+        }
+
+        function actualizarTotales(subtotal) {
+            let envio = subtotal > 0 ? COSTO_ENVIO : 0;
+            let envioGratisAplicado = false;
+
+            if (subtotal >= UMBRAL_ENVIO_GRATIS) {
+                envio = 0;
+                envioGratisAplicado = true;
+                document.getElementById('textoEnvioGratis').innerText = "¡Felicidades! Tienes Envío Gratis";
+                document.getElementById('barraProgreso').style.width = "100%";
+            } else {
+                let falta = UMBRAL_ENVIO_GRATIS - subtotal;
+                let porcentaje = (subtotal / UMBRAL_ENVIO_GRATIS) * 100;
+                document.getElementById('textoEnvioGratis').innerText = `Te faltan $${falta} para Envío Gratis`;
+                document.getElementById('barraProgreso').style.width = `${porcentaje}%`;
+            }
+
+            const total = subtotal + envio;
+
+            document.getElementById('subtotalTxt').innerText = `$${subtotal}`;
+            document.getElementById('envioTxt').innerText = envioGratisAplicado ? 'GRATIS' : `$${envio}`;
+            document.getElementById('totalTxt').innerText = `$${total}`;
+        }
+
+        function abrirModalRevision() {
+            const nombre = document.getElementById('nombreCliente').value.trim();
+            const calle = document.getElementById('calleNumero').value.trim();
+            const colonia = document.getElementById('coloniaCliente').value.trim();
+            const referencias = document.getElementById('referenciasCliente').value.trim();
+            const telefono = document.getElementById('telefonoCliente').value.trim();
+
+            if (!nombre || !calle || !colonia || !telefono) {
+                alert('Por favor completa tu nombre, calle, colonia y número de teléfono.');
+                const inputNombre = document.getElementById('nombreCliente');
+                inputNombre.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                inputNombre.focus();
+                return;
+            }
+            if (pedido.length === 0) {
+                alert('Agrega al menos un esquite a tu pedido.');
+                return;
+            }
+
+            let subtotal = pedido.reduce((acc, i) => acc + i.precio, 0);
+            let envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : COSTO_ENVIO;
+            let total = subtotal + envio;
+
+            let textoResumen = `*PEDIDO ESQUITAZOS*\n`;
+            textoResumen += `Nombre: ${nombre}\n`;
+            textoResumen += `Teléfono: ${telefono}\n`;
+            textoResumen += `Dirección: ${calle}, Col. ${colonia}\n`;
+            if(referencias) textoResumen += `Referencias: ${referencias}\n`;
+            textoResumen += `\n*Mi Pedido:*\n`;
+            
+            pedido.forEach((item, idx) => {
+                textoResumen += `#${idx + 1} ${item.sabor} (${item.tamano}): ${item.detalles}\n`;
+            });
+            
+            const nota = document.getElementById('notaCliente').value.trim();
+            if(nota) textoResumen += `\nNota: ${nota}\n`;
+            
+            textoResumen += `\nSubtotal: $${subtotal}\n`;
+            textoResumen += `Envío: ${envio === 0 ? 'GRATIS' : '$' + envio}\n`;
+            textoResumen += `*Total a Pagar: $${total}*`;
+
+            document.getElementById('contenidoRevision').innerText = textoResumen;
+            document.getElementById('modalRevision').classList.remove('hidden');
+        }
+
+        function cerrarModalRevision() {
+            document.getElementById('modalRevision').classList.add('hidden');
+        }
+
+        function enviarWhatsAppReal() {
+            const nombre = document.getElementById('nombreCliente').value.trim();
+            const calle = document.getElementById('calleNumero').value.trim();
+            const colonia = document.getElementById('coloniaCliente').value.trim();
+            const referencias = document.getElementById('referenciasCliente').value.trim();
+            const telefono = document.getElementById('telefonoCliente').value.trim();
+            
+            let subtotal = pedido.reduce((acc, i) => acc + i.precio, 0);
+            let envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : COSTO_ENVIO;
+            let total = subtotal + envio;
+
+            let mensaje = `Hola, este es mi pedido:\n\n`;
+            mensaje += `*Nombre:* ${nombre}\n`;
+            mensaje += `*Teléfono:* ${telefono}\n`;
+            mensaje += `*Dirección:* ${calle}, Col. ${colonia}\n`;
+            if(referencias) mensaje += `*Referencias:* ${referencias}\n`;
+            mensaje += `\n*Mi pedido:*\n`;
+            
+            pedido.forEach((item, idx) => {
+                mensaje += `#${idx + 1} ${item.sabor} (${item.tamano}): ${item.detalles}\n`;
+            });
+
+            const nota = document.getElementById('notaCliente').value.trim();
+            if(nota) {
+                mensaje += `\n*Nota:* ${nota}\n`;
+            }
+
+            mensaje += `\n*Total: $${total}* ${subtotal >= UMBRAL_ENVIO_GRATIS ? '(¡Envío gratis aplicado!)' : ''}`;
+
+            const telefonoNegocio = "5214681208641";
+            const urlWhatsApp = `https://wa.me/${telefonoNegocio}?text=${encodeURIComponent(mensaje)}`;
+
+            window.open(urlWhatsApp, '_blank');
+            cerrarModalRevision();
+
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        renderizarSabores();
+    </script>
+</body>
+</html>
