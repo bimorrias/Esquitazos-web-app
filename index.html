@@ -31,7 +31,7 @@
     <!-- ANIMACIONES CSS SUAVES Y FLUIDAS -->
     <style>
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-8px); }
+            from { opacity: 0; transform: translateY(-6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes popIn {
@@ -39,7 +39,7 @@
             100% { opacity: 1; transform: scale(1); }
         }
         .animate-fade-in {
-            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .animate-pop-in {
             animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -48,7 +48,7 @@
             scroll-behavior: smooth;
         }
         button {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         /* ESTILO PARA EL LIENZO COMPLETO DE FONDO EN EL TICKET DE REVISIÓN */
         #contenidoRevision {
@@ -86,12 +86,11 @@
     <main class="max-w-xl mx-auto p-4 space-y-6">
 
         <!-- 1. ESCOGE TUS ESQUITES -->
-        <section class="space-y-4">
-            <div class="text-center space-y-1 px-1">
+        <section class="space-y-3">
+            <div class="text-center px-1">
                 <h2 class="text-3xl font-black text-white tracking-wide">
                     Escoge tus Esquites
                 </h2>
-                <p id="instruccionMenu" class="font-rancho text-2xl text-orange-200 tracking-wide">Toca cualquier tarjeta para comenzar a armar tu pedido</p>
             </div>
 
             <!-- GRILLA 2X2 ADAPTABLE PARA QUE SE VEAN LOS 4 SIN SCROLLEAR -->
@@ -144,7 +143,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Colonia</label>
-                    <input type="text" id="coloniaCliente" autocomplete="address-level2" placeholder="Ej. Vicente Guerrero" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+                    <input type="text" id="coloniaCliente" autocomplete="address-level2" placeholder="Ej. Centro" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
                 </div>
             </div>
 
@@ -160,7 +159,7 @@
 
             <div>
                 <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Notas especiales (Opcional)</label>
-                <input type="text" id="notaCliente" autocomplete="off" maxlength="80" placeholder="Ej. Si no hay huesito de espinazo, avísenme" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none transition text-white placeholder-gray-500 font-sans font-normal">
+                <input type="text" id="notaCliente" autocomplete="off" maxlength="80" placeholder="Ej. Toquen muy fuerte porque me voy a bañar y luego no escucho" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none transition text-white placeholder-gray-500 font-sans font-normal">
             </div>
         </section>
 
@@ -230,11 +229,38 @@
             tuetano: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null }
         };
 
+        // BOTÓN ESTÁNDAR LIMPIO (PARA TAMAÑOS, LIMÓN, CHILE, ETC.)
         function botonImagen(imgSrc, fallbackText, onClickAttr, isActive = false) {
             return `
-                <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98] ${isActive ? 'ring-4 ring-orange-500 rounded-2xl' : ''}">
-                    <img src="${imgSrc}" alt="${fallbackText}" class="w-full h-auto rounded-2xl shadow-md hover:scale-[1.005]" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98]">
+                    <div class="relative rounded-2xl overflow-hidden shadow-md border-2 transition-all ${isActive ? 'border-orange-500 ring-4 ring-orange-500/30' : 'border-cafe-700 opacity-90 hover:opacity-100'}">
+                        <img src="${imgSrc}" alt="${fallbackText}" class="w-full h-auto object-cover rounded-2xl" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    </div>
                     <div style="display:none;" class="py-3 px-4 rounded-xl border text-base font-bold bg-cafe-900 border-cafe-700 text-white ${isActive ? 'bg-orange-600 border-orange-400' : 'hover:bg-cafe-800'}">
+                        ${fallbackText}
+                    </div>
+                </button>
+            `;
+        }
+
+        // BOTÓN ESPECIAL CON PALOMITA (EXCLUSIVO PARA LOS QUESOS DE MANTEQUILLA)
+        function botonQuesoImagen(imgSrc, fallbackText, onClickAttr, isActive = false) {
+            return `
+                <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98]">
+                    <div class="relative rounded-2xl overflow-hidden shadow-md border-2 transition-all ${isActive ? 'border-emerald-500 ring-4 ring-emerald-500/30 bg-emerald-950/40' : 'border-cafe-700 opacity-90 hover:opacity-100'}">
+                        <img src="${imgSrc}" alt="${fallbackText}" class="w-full h-auto object-cover rounded-2xl" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        
+                        ${isActive ? `
+                            <div class="absolute top-2 left-2 bg-emerald-600 text-white text-[12px] font-bold px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-1 border border-emerald-400">
+                                <span>✓</span> Seleccionado
+                            </div>
+                        ` : `
+                            <div class="absolute top-2 left-2 bg-cafe-900/90 text-gray-300 text-[11px] font-bold px-2 py-1 rounded-xl shadow-lg border border-cafe-700">
+                                + Agregar
+                            </div>
+                        `}
+                    </div>
+                    <div style="display:none;" class="py-3 px-4 rounded-xl border text-base font-bold bg-cafe-900 border-cafe-700 text-white ${isActive ? 'bg-emerald-600 border-emerald-400' : 'hover:bg-cafe-800'}">
                         ${fallbackText}
                     </div>
                 </button>
@@ -243,14 +269,7 @@
 
         function renderizarSabores() {
             const contenedor = document.getElementById('contenedorSabores');
-            const instruccion = document.getElementById('instruccionMenu');
             let html = '';
-
-            if (saborAbierto) {
-                instruccion.innerText = "Configura tu esquite paso a paso:";
-            } else {
-                instruccion.innerText = "Toca cualquier tarjeta para comenzar a armar tu pedido";
-            }
 
             saboresData.forEach(s => {
                 const isOpen = saborAbierto === s.id;
@@ -337,7 +356,6 @@
         function toggleQuesoMantequilla(id, queso) {
             seleccionesActuales[id][queso] = !seleccionesActuales[id][queso];
             renderizarSabores();
-            autoScrollActiveStep();
         }
 
         function confirmarQuesosMantequilla(id) {
@@ -452,21 +470,21 @@
             autoScrollActiveStep();
         }
 
-        // RENDERIZADO ACUMULATIVO MANTEQUILLA
+        // RENDERIZADO MANTEQUILLA (USA botonQuesoImagen PARA LOS QUESOS)
         function renderizarMantequilla(sel) {
             let html = '';
 
             // 1. TAMAÑO
             if (!sel.tam) {
-                html += `<div id="paso-activo" class="space-y-2.5"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
-                    <div class="grid grid-cols-2 gap-3">
+                html += `<div id="paso-activo" class="space-y-2"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="grid grid-cols-2 gap-2">
                         ${botonImagen('img/btn_mediano.webp', 'Mediano ($55)', `seleccionarTamano('mantequilla', 'med')`)}
                         ${botonImagen('img/btn_grande.webp', 'Grande ($90)', `seleccionarTamano('mantequilla', 'grande')`)}
                     </div>
                 </div>`;
             } else {
-                html += `<div class="space-y-2.5"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Tamaño: <b>${sel.tam === 'med' ? 'Mediano ($55)' : 'Grande ($90)'}</b></span>
                         <button type="button" onclick="reiniciarPaso('mantequilla', 1)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -475,12 +493,12 @@
 
             if (!sel.tam) return html;
 
-            // 2. QUESOS
+            // 2. QUESOS (AQUÍ SÍ LLEVAN EL INDICADOR DE SELECCIONADO / AGREGAR)
             if (!sel.quesosListos) {
-                html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos:</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        ${botonImagen('img/btn_queso_panela.webp', sel.panela ? '✓ Queso Panela' : '+ Queso Panela', `toggleQuesoMantequilla('mantequilla', 'panela')`, sel.panela)}
-                        ${botonImagen('img/btn_queso_molido.webp', sel.molido ? '✓ Queso Molido' : '+ Queso Molido', `toggleQuesoMantequilla('mantequilla', 'molido')`, sel.molido)}
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos (Toca para quitar/poner):</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        ${botonQuesoImagen('img/btn_queso_panela.webp', 'Queso Panela', `toggleQuesoMantequilla('mantequilla', 'panela')`, sel.panela)}
+                        ${botonQuesoImagen('img/btn_queso_molido.webp', 'Queso Molido', `toggleQuesoMantequilla('mantequilla', 'molido')`, sel.molido)}
                     </div>
                     <button type="button" onclick="confirmarQuesosMantequilla('mantequilla')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl text-sm shadow-md mt-2">
                         Continuar ➔
@@ -490,8 +508,8 @@
                 let qArr = [];
                 if (sel.panela) qArr.push('Queso Panela');
                 if (sel.molido) qArr.push('Queso Molido');
-                html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos:</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos:</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Quesos: <b>${qArr.length > 0 ? qArr.join(' y ') : 'Sin queso'}</b></span>
                         <button type="button" onclick="reiniciarPaso('mantequilla', 2)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -502,8 +520,8 @@
 
             // 3. CHILE
             if (!sel.tipoChili) {
-                html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
-                    <div class="grid grid-cols-3 gap-2.5">
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="grid grid-cols-3 gap-2">
                         ${botonImagen('img/btn_del_que_pica.webp', 'Del que pica', `seleccionarTipoChiliMantequilla('pica')`)}
                         ${botonImagen('img/btn_del_que_no_pica.webp', 'Del que no pica', `seleccionarTipoChiliMantequilla('no_pica')`)}
                         ${botonImagen('img/btn_sin_chilito.webp', 'Sin chilito', `seleccionarTipoChiliMantequilla('sin')`)}
@@ -511,8 +529,8 @@
                 </div>`;
             } else {
                 let txtChili = sel.tipoChili === 'pica' ? 'Del que pica' : (sel.tipoChili === 'no_pica' ? 'Del que no pica' : 'Sin chilito');
-                html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Chile: <b>${txtChili}</b></span>
                         <button type="button" onclick="reiniciarPaso('mantequilla', 3)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -524,16 +542,16 @@
             // 4. NIVEL DE PICANTE
             if (sel.tipoChili === 'pica') {
                 if (!sel.nivelPica) {
-                    html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
-                        <div class="grid grid-cols-3 gap-2.5">
-                            ${botonImagen('img/btn_picosito.webp', 'Picosito (Chile)', `seleccionarNivelPicaMantequilla('Picosito')`)}
-                            ${botonImagen('img/btn_picoson.webp', 'Picosón (Chile)', `seleccionarNivelPicaMantequilla('Picosón')`)}
-                            ${botonImagen('img/btn_picosote.webp', 'Picosote (Chile)', `seleccionarNivelPicaMantequilla('Picosote')`)}
+                    html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            ${botonImagen('img/btn_picosito.webp', 'Picosito', `seleccionarNivelPicaMantequilla('Picosito')`)}
+                            ${botonImagen('img/btn_picoson.webp', 'Picosón', `seleccionarNivelPicaMantequilla('Picosón')`)}
+                            ${botonImagen('img/btn_picosote.webp', 'Picosote', `seleccionarNivelPicaMantequilla('Picosote')`)}
                         </div>
                     </div>`;
                 } else {
-                    html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
-                        <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                    html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
+                        <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                             <span>✓ Nivel: <b>${sel.nivelPica}</b></span>
                             <button type="button" onclick="reiniciarPaso('mantequilla', 4)" class="text-orange-300 underline font-bold">Cambiar</button>
                         </div>
@@ -544,7 +562,7 @@
             }
 
             // 5. BOTÓN AGREGAR AL PEDIDO
-            html += `<div id="paso-activo" class="pt-4 border-t border-cafe-700 animate-fade-in">
+            html += `<div id="paso-activo" class="pt-3 border-t border-cafe-700 animate-fade-in">
                 <button type="button" onclick="agregarItem('mantequilla')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg text-base flex items-center justify-center gap-2">
                     <span>🛒</span> ¡Agregar al Pedido!
                 </button>
@@ -553,21 +571,21 @@
             return html;
         }
 
-        // RENDERIZADO ACUMULATIVO OTROS SABORES
+        // RENDERIZADO OTROS SABORES (USA botonImagen ESTÁNDAR)
         function renderizarOtrosSabores(id, sel, s) {
             let html = '';
 
             // 1. TAMAÑO
             if (!sel.tam) {
-                html += `<div id="paso-activo" class="space-y-2.5"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
-                    <div class="grid grid-cols-2 gap-3">
+                html += `<div id="paso-activo" class="space-y-2"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="grid grid-cols-2 gap-2">
                         ${botonImagen('img/btn_mediano.webp', `Mediano ($${s.med})`, `seleccionarTamano('${id}', 'med')`)}
                         ${botonImagen('img/btn_grande.webp', `Grande ($${s.grande})`, `seleccionarTamano('${id}', 'grande')`)}
                     </div>
                 </div>`;
             } else {
-                html += `<div class="space-y-2.5"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Tamaño: <b>${sel.tam === 'med' ? `Mediano ($${s.med})` : `Grande ($${s.grande})`}</b></span>
                         <button type="button" onclick="reiniciarPaso('${id}', 1)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -578,8 +596,8 @@
 
             // BOTÓN DE ATAJO: "TODO APARTE"
             if (sel.tieneLimon === null && sel.tieneChili === null) {
-                html += `<div class="pt-2 animate-fade-in">
-                    <button type="button" onclick="aplicarTodoAparte('${id}')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3 px-3 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 animate-pulse border border-orange-400/50">
+                html += `<div class="pt-1 animate-fade-in">
+                    <button type="button" onclick="aplicarTodoAparte('${id}')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-2.5 px-3 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 animate-pulse border border-orange-400/50">
                         <span>⚡</span> Todo aparte
                     </button>
                 </div>`;
@@ -588,8 +606,8 @@
             // 2. LIMÓN
             const limonListo = (sel.tieneLimon === 'no') || (sel.tieneLimon === 'si' && sel.limon);
             if (sel.tieneLimon === null) {
-                html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
-                    <div class="grid grid-cols-2 gap-3">
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
+                    <div class="grid grid-cols-2 gap-2">
                         ${botonImagen('img/btn_con_limon.webp', 'Sí lleva limón', `seleccionarTieneLimon('${id}', 'si')`)}
                         ${botonImagen('img/btn_sin_limon.webp', 'Sin limón', `seleccionarTieneLimon('${id}', 'no')`)}
                     </div>
@@ -600,15 +618,15 @@
                     { text: 'Limón extra', img: 'img/btn_limon_extra.webp' },
                     { text: 'Limón aparte', img: 'img/btn_limon_aparte.webp' }
                 ];
-                html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">🍋 ¿Cómo quieres el limón?</label>
-                    <div class="grid grid-cols-3 gap-2.5">`;
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">🍋 ¿Cómo quieres el limón?</label>
+                    <div class="grid grid-cols-3 gap-2">`;
                 opcionesLimon.forEach(opt => {
                     html += botonImagen(opt.img, opt.text, `seleccionarLimon('${id}', '${opt.text}')`);
                 });
                 html += `</div></div>`;
             } else {
-                html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Limón: <b>${sel.limon}</b></span>
                         <button type="button" onclick="reiniciarPaso('${id}', 2)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -619,15 +637,15 @@
 
             // 3. CHILE
             if (sel.tieneChili === null) {
-                html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
-                    <div class="grid grid-cols-2 gap-3">
+                html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="grid grid-cols-2 gap-2">
                         ${botonImagen('img/btn_con_chile.webp', 'Sí lleva chile', `seleccionarTieneChili('${id}', 'si')`)}
                         ${botonImagen('img/btn_sin_chile.webp', 'Sin chile', `seleccionarTieneChili('${id}', 'no')`)}
                     </div>
                 </div>`;
             } else {
-                html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
-                    <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
+                    <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                         <span>✓ Chile: <b>${sel.tieneChili === 'si' ? (sel.chili || 'Con chile') : 'Sin chile'}</b></span>
                         <button type="button" onclick="reiniciarPaso('${id}', 3)" class="text-orange-300 underline font-bold">Cambiar</button>
                     </div>
@@ -645,15 +663,15 @@
                         { text: 'Picosote', img: 'img/btn_picosote.webp' },
                         { text: 'Chile aparte', img: 'img/btn_chile_aparte.webp' }
                     ];
-                    html += `<div id="paso-activo" class="space-y-2.5 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">`;
+                    html += `<div id="paso-activo" class="space-y-2 pt-3 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">`;
                     opcionesChile.forEach(opt => {
                         html += botonImagen(opt.img, opt.text, `seleccionarNivelChile('${id}', '${opt.text}')`);
                     });
                     html += `</div></div>`;
                 } else {
-                    html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
-                        <div class="bg-cafe-900 p-3.5 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
+                    html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tal el chilito?</label>
+                        <div class="bg-cafe-900 p-3 rounded-xl border border-cafe-700 flex justify-between items-center text-sm">
                             <span>✓ Nivel: <b>${sel.chili}</b></span>
                             <button type="button" onclick="reiniciarPaso('${id}', 4)" class="text-orange-300 underline font-bold">Cambiar</button>
                         </div>
@@ -665,7 +683,7 @@
 
             // 5. HUESITO (SOLO ESPINAZO GRANDE)
             if (id === 'espinazo' && sel.tam === 'grande') {
-                html += `<div class="space-y-2.5 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">5️⃣ Extra opcional:</label>
+                html += `<div class="space-y-2 pt-3 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">5️⃣ Extra opcional:</label>
                     <button type="button" onclick="toggleHuesitoEspinazo('${id}')" class="w-full py-3.5 px-4 rounded-xl text-sm font-bold border ${sel.huesito ? 'bg-amber-600 text-white border-amber-500 shadow' : 'bg-cafe-900 text-amber-300 border-cafe-700'}">
                         ${sel.huesito ? '🦴 Huesito de espinazo agregado' : '+ Agregar huesito de espinazo (Sujeto a disponibilidad)'}
                     </button>
@@ -673,7 +691,7 @@
             }
 
             // 6. BOTÓN AGREGAR AL PEDIDO
-            html += `<div id="paso-activo" class="pt-4 border-t border-cafe-700 animate-fade-in">
+            html += `<div id="paso-activo" class="pt-3 border-t border-cafe-700 animate-fade-in">
                 <button type="button" onclick="agregarItem('${id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg text-base flex items-center justify-center gap-2">
                     <span>🛒</span> ¡Agregar al Pedido!
                 </button>
