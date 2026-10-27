@@ -1,3 +1,4 @@
+</html>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -518,14 +519,14 @@
 
             if (!sel.quesosListos) return html;
 
-            // 3. CHILE
+            // 3. CHILE (3 opciones: 2 arriba, 3era centrada con ancho de 1 columna exacto)
             if (!sel.tipoChili) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
                     <div class="grid grid-cols-2 gap-3">
                         ${botonImagen('img/btn_del_que_pica.webp', 'Del que pica', `seleccionarTipoChiliMantequilla('pica')`)}
                         ${botonImagen('img/btn_del_que_no_pica.webp', 'Del que no pica', `seleccionarTipoChiliMantequilla('no_pica')`)}
                         <div class="col-span-2 flex justify-center">
-                            <div class="w-full sm:w-1/2">
+                            <div class="w-1/2">
                                 ${botonImagen('img/btn_sin_chilito.webp', 'Sin chilito', `seleccionarTipoChiliMantequilla('sin')`)}
                             </div>
                         </div>
@@ -551,7 +552,7 @@
                             ${botonImagen('img/btn_picosito.webp', 'Picosito', `seleccionarNivelPicaMantequilla('Picosito')`)}
                             ${botonImagen('img/btn_picoson.webp', 'Picosón', `seleccionarNivelPicaMantequilla('Picosón')`)}
                             <div class="col-span-2 flex justify-center">
-                                <div class="w-full sm:w-1/2">
+                                <div class="w-1/2">
                                     ${botonImagen('img/btn_picosote.webp', 'Picosote', `seleccionarNivelPicaMantequilla('Picosote')`)}
                                 </div>
                             </div>
@@ -611,7 +612,7 @@
                 </div>`;
             }
 
-            // 2. LIMÓN
+            // 2. LIMÓN (3 opciones: 2 arriba, 3era centrada con ancho de 1 columna exacto)
             const limonListo = (sel.tieneLimon === 'no') || (sel.tieneLimon === 'si' && sel.limon);
             if (sel.tieneLimon === null) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
@@ -632,7 +633,7 @@
                     if (idx === 2) {
                         html += `
                             <div class="col-span-2 flex justify-center">
-                                <div class="w-full sm:w-1/2">
+                                <div class="w-1/2">
                                     ${botonImagen(opt.img, opt.text, `seleccionarLimon('${id}', '${opt.text}')`)}
                                 </div>
                             </div>
