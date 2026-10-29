@@ -50,6 +50,10 @@
         button {
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        /* Margen superior de seguridad para que las barras sticky no tapen la sección al hacer scroll */
+        #seccionDatosEntrega {
+            scroll-margin-top: 160px;
+        }
         #contenidoRevision {
             background: linear-gradient(rgba(90, 45, 27, 0.82), rgba(90, 45, 27, 0.82)), url('img/esquitazo_mandil.webp');
             background-repeat: no-repeat;
@@ -278,7 +282,7 @@
         
         let seleccionesActuales = {
             mantequilla: { tam: null, panela: true, molido: true, quesosListos: false, tipoChili: null, nivelPica: null },
-            espinazo: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null, huesito: false },
+            espinazo: { tam: null, tieneLinoon: null, limon: null, tieneChili: null, chili: null, huesito: false },
             camaron: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null },
             tuetano: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null }
         };
@@ -1008,7 +1012,7 @@
             if (!nombre || !telefono || !calle || !colonia) {
                 alert('¡Faltan datos! Por favor completa tu nombre, teléfono, calle y colonia para enviar tus Esquitazos 🌽🔥');
                 
-                // Desplazamos la pantalla hacia la sección de datos de entrega para ver los accesos rápidos sin abrir el teclado.
+                // Desplazamiento limpio hacia la sección respetando el margen superior de las barras fijas
                 const seccionDatos = document.getElementById('seccionDatosEntrega');
                 seccionDatos.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 return;
@@ -1079,10 +1083,9 @@
 
             const nota = document.getElementById('notaCliente').value.trim();
             if(nota) {
-                mensajeWhatsApp += `\n*Nota:* ${nota}\n`;
+                mensajeWhatsApp += `*Nota:* ${nota}\n`;
             }
 
-            // Desglose final claro para el WhatsApp (sin el link de mapas)
             mensajeWhatsApp += `\nSubtotal: $${subtotal}\n`;
             mensajeWhatsApp += `Envío: ${envio === 0 ? 'GRATIS' : '$' + envio}\n`;
             mensajeWhatsApp += `*Total a Pagar: $${total}* ${subtotal >= UMBRAL_ENVIO_GRATIS ? '(¡Envío gratis aplicado!)' : ''}`;
