@@ -1,4 +1,3 @@
-</html>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -51,7 +50,6 @@
         button {
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        /* ESTILO PARA EL LIENZO COMPLETO DE FONDO EN EL TICKET DE REVISIÓN */
         #contenidoRevision {
             background: linear-gradient(rgba(90, 45, 27, 0.82), rgba(90, 45, 27, 0.82)), url('img/esquitazo_mandil.webp');
             background-repeat: no-repeat;
@@ -94,7 +92,6 @@
                 </h2>
             </div>
 
-            <!-- GRILLA 2X2 ADAPTABLE PARA QUE SE VEAN LOS 4 SIN SCROLLEAR -->
             <div id="contenedorSabores" class="grid grid-cols-2 gap-2.5 sm:gap-3">
                 <!-- Se inyecta dinámicamente -->
             </div>
@@ -129,33 +126,73 @@
         <!-- 2. DATOS DE ENTREGA Y CONTACTO -->
         <section id="seccionDatosEntrega" class="bg-cafe-800 p-6 rounded-2xl shadow-lg border border-cafe-700 space-y-5 text-white">
             <h2 class="text-2xl font-black tracking-wide">
-                📍 Datos de Entrega y Contacto
+                📍 Datos de Entrega
             </h2>
+
+            <!-- AVISO FLOTANTE DE DIRECCIÓN CARGADA -->
+            <div id="alertaDireccion" class="hidden bg-emerald-600/90 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-lg text-center animate-fade-in border border-emerald-400">
+                ✨ ¡Dirección cargada con éxito! Revisa tus datos abajo.
+            </div>
+
+            <!-- BOTONES DE DIRECCIONES GUARDADAS -->
+            <div id="seccionDireccionesGuardadas" class="hidden space-y-2 bg-cafe-900 p-4 rounded-xl border border-cafe-700">
+                <div class="flex justify-between items-center">
+                    <label class="block text-xs font-bold text-amber-300 uppercase tracking-wider">⚡ Accesos rápidos:</label>
+                    <button type="button" onclick="abrirModalDirecciones()" class="text-xs text-orange-300 hover:text-orange-200 underline font-bold flex items-center gap-1">
+                        ⚙️ Administrar / Borrar
+                    </button>
+                </div>
+                <div id="botonesDireccionesContainer" class="flex flex-wrap gap-2">
+                    <!-- Botones inyectados dinámicamente -->
+                </div>
+            </div>
             
             <div>
                 <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Nombre</label>
                 <input type="text" id="nombreCliente" autocomplete="name" placeholder="Ej. Juan Pérez" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Calle con Número</label>
-                    <input type="text" id="calleNumero" autocomplete="address-line1" placeholder="Ej. Hidalgo #12" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+            <div>
+                <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1">Número de Teléfono (WhatsApp)</label>
+                <span class="block text-xs text-amber-300 font-medium mb-2 leading-relaxed">⚠️ <b>Importante:</b> Verifica que sea el número del teléfono que estás usando. Lo utilizaremos para confirmar tu pedido y avisarte cuando vaya el repartidor en camino.</span>
+                <input type="tel" id="telefonoCliente" autocomplete="tel" maxlength="12" placeholder="Ej. 468-123-4567" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+            </div>
+
+            <!-- CALLE Y NÚMERO SEPARADOS -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2 relative">
+                    <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Calle</label>
+                    <input type="text" id="calleNombre" autocomplete="off" placeholder="Ej. Hidalgo" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+                    <div id="sugerenciasCalles" class="absolute left-0 right-0 bg-cafe-900 border border-cafe-700 rounded-xl mt-1 max-h-48 overflow-y-auto z-50 shadow-xl hidden"></div>
                 </div>
+                
                 <div>
-                    <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Colonia</label>
-                    <input type="text" id="coloniaCliente" autocomplete="address-level2" placeholder="Ej. Centro" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+                    <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Número</label>
+                    <input type="text" id="numeroCasa" autocomplete="off" placeholder="Ej. #12" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
                 </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Colonia</label>
+                <input type="text" id="coloniaCliente" list="listaColonias" autocomplete="off" placeholder="Selecciona o escribe tu colonia" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
+                <datalist id="listaColonias">
+                    <option value="Centro">
+                    <option value="Vicente Guerrero">
+                    <option value="San Isidrito">
+                    <option value="Lomas de Santa Elena">
+                    <option value="Banda de arriba">
+                    <option value="Banda de abajo">
+                    <option value="Señor Eccehomo">
+                    <option value="Independencia">
+                    <option value="La Misión">
+                    <option value="El Charquito">
+                    <option value="La Luz">
+                </datalist>
             </div>
 
             <div>
                 <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Referencias de la casa</label>
                 <input type="text" id="referenciasCliente" autocomplete="off" placeholder="Ej. Casa verde, portón negro, frente a tiendita" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
-            </div>
-
-            <div>
-                <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Número de Teléfono (WhatsApp)</label>
-                <input type="tel" id="telefonoCliente" autocomplete="tel" placeholder="Ej. 4681234567" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
             </div>
 
             <div>
@@ -165,6 +202,23 @@
         </section>
 
     </main>
+
+    <!-- MODAL ADMINISTRAR / BORRAR DIRECCIONES -->
+    <div id="modalDirecciones" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cafe-800 text-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 border border-cafe-700 animate-pop-in">
+            <div class="flex justify-between items-center border-b border-cafe-700 pb-3">
+                <h3 class="text-xl font-black">⚙️ Administrar Direcciones</h3>
+                <button onclick="cerrarModalDirecciones()" class="text-gray-300 hover:text-white font-bold text-3xl">&times;</button>
+            </div>
+            <p class="text-xs text-orange-200">Aquí puedes eliminar las direcciones que tengan algún error o ya no uses:</p>
+            
+            <div id="listaDireccionesGestion" class="space-y-2 max-h-60 overflow-y-auto divide-y divide-cafe-700/50">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+
+            <button type="button" onclick="cerrarModalDirecciones()" class="w-full bg-cafe-900 hover:bg-cafe-700 text-crema-100 font-bold py-3 rounded-xl border border-cafe-700 transition">Cerrar</button>
+        </div>
+    </div>
 
     <!-- BOTÓN FLOTANTE DE ENVIAR -->
     <div class="fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
@@ -230,7 +284,196 @@
             tuetano: { tam: null, tieneLimon: null, limon: null, tieneChili: null, chili: null }
         };
 
-        // BOTÓN ESTÁNDAR LIMPIO (EN 2 COLUMNAS)
+        // ==========================================
+        // TELÉFONO CON MÁSCARA VISUAL (CON GUIONES)
+        // ==========================================
+        const inputTel = document.getElementById('telefonoCliente');
+        
+        function formatearTelefonoVisual(val) {
+            let nums = val.replace(/\D/g, ''); 
+            if (nums.length > 10) nums = nums.substring(0, 10);
+            
+            if (nums.length > 6) {
+                return `${nums.substring(0,3)}-${nums.substring(3,6)}-${nums.substring(6)}`;
+            } else if (nums.length > 3) {
+                return `${nums.substring(0,3)}-${nums.substring(3)}`;
+            }
+            return nums;
+        }
+
+        inputTel.addEventListener('input', function(e) {
+            e.target.value = formatearTelefonoVisual(e.target.value);
+        });
+
+        // ==========================================
+        // CARGAR DATOS GUARDADOS EN LOCALSTORAGE
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const telGuardado = localStorage.getItem('esquitazos_telefono');
+            const nombreGuardado = localStorage.getItem('esquitazos_nombre');
+            
+            if (telGuardado) inputTel.value = formatearTelefonoVisual(telGuardado);
+            if (nombreGuardado) document.getElementById('nombreCliente').value = nombreGuardado;
+
+            renderizarBotonesDireccionesGuardadas();
+        });
+
+        function guardarDireccionActual() {
+            const nombre = document.getElementById('nombreCliente').value.trim();
+            const calle = document.getElementById('calleNombre').value.trim();
+            const numero = document.getElementById('numeroCasa').value.trim();
+            const colonia = document.getElementById('coloniaCliente').value.trim();
+            const referencias = document.getElementById('referenciasCliente').value.trim();
+            const telefono = inputTel.value.replace(/-/g, '').trim();
+
+            if (!calle || !colonia) return;
+
+            if (telefono) localStorage.setItem('esquitazos_telefono', telefono);
+            if (nombre) localStorage.setItem('esquitazos_nombre', nombre);
+
+            let direcciones = JSON.parse(localStorage.getItem('esquitazos_direcciones') || '[]');
+            const etiqueta = `${calle} ${numero}`;
+            
+            const indexExistente = direcciones.findIndex(d => d.calle === calle && d.numero === numero && d.colonia === colonia);
+            if (indexExistente !== -1) {
+                direcciones[indexExistente] = { nombre, calle, numero, colonia, referencias, etiqueta };
+            } else {
+                direcciones.push({ nombre, calle, numero, colonia, referencias, etiqueta });
+            }
+            localStorage.setItem('esquitazos_direcciones', JSON.stringify(direcciones));
+        }
+
+        function renderizarBotonesDireccionesGuardadas() {
+            const direcciones = JSON.parse(localStorage.getItem('esquitazos_direcciones') || '[]');
+            const contenedorSeccion = document.getElementById('seccionDireccionesGuardadas');
+            const contenedorBotones = document.getElementById('botonesDireccionesContainer');
+
+            if (direcciones.length === 0) {
+                contenedorSeccion.classList.add('hidden');
+                return;
+            }
+
+            contenedorSeccion.classList.remove('hidden');
+            contenedorBotones.innerHTML = '';
+
+            direcciones.forEach((dir) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'bg-cafe-800 hover:bg-orange-600 text-orange-200 hover:text-white text-xs font-bold py-2 px-3 rounded-lg border border-cafe-700 transition flex items-center gap-1.5 shadow-sm';
+                btn.innerHTML = `🏠 <span>${dir.etiqueta}, Col. ${dir.colonia}</span>`;
+                
+                btn.onclick = () => {
+                    if(dir.nombre) document.getElementById('nombreCliente').value = dir.nombre;
+                    document.getElementById('calleNombre').value = dir.calle;
+                    document.getElementById('numeroCasa').value = dir.numero || '';
+                    document.getElementById('coloniaCliente').value = dir.colonia;
+                    document.getElementById('referenciasCliente').value = dir.referencias || '';
+
+                    const alerta = document.getElementById('alertaDireccion');
+                    alerta.classList.remove('hidden');
+                    alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => {
+                        alerta.classList.add('hidden');
+                    }, 3500);
+                };
+
+                contenedorBotones.appendChild(btn);
+            });
+        }
+
+        // ==========================================
+        // MODAL DE ADMINISTRACIÓN / BORRADO SEGURO
+        // ==========================================
+        function abrirModalDirecciones() {
+            const direcciones = JSON.parse(localStorage.getItem('esquitazos_direcciones') || '[]');
+            const listaDiv = document.getElementById('listaDireccionesGestion');
+            
+            if (direcciones.length === 0) {
+                listaDiv.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">No hay direcciones guardadas aún.</p>`;
+            } else {
+                let html = '';
+                direcciones.forEach((dir, idx) => {
+                    html += `
+                        <div class="py-2.5 flex justify-between items-center gap-3">
+                            <div class="text-sm">
+                                <p class="font-bold text-white">🏠 ${dir.etiqueta}</p>
+                                <p class="text-xs text-orange-200">Col. ${dir.colonia} ${dir.referencias ? '• Ref: ' + dir.referencias : ''}</p>
+                            </div>
+                            <button type="button" onclick="borrarDireccionGuardada(${idx})" class="bg-red-900/60 hover:bg-red-700 text-red-200 text-xs font-bold px-3 py-1.5 rounded-lg border border-red-600/40 transition shrink-0">
+                                🗑️ Borrar
+                            </button>
+                        </div>
+                    `;
+                });
+                listaDiv.innerHTML = html;
+            }
+            document.getElementById('modalDirecciones').classList.remove('hidden');
+        }
+
+        function cerrarModalDirecciones() {
+            document.getElementById('modalDirecciones').classList.add('hidden');
+        }
+
+        function borrarDireccionGuardada(index) {
+            let direcciones = JSON.parse(localStorage.getItem('esquitazos_direcciones') || '[]');
+            if (confirm("¿Estás seguro de eliminar esta dirección guardada?")) {
+                direcciones.splice(index, 1);
+                localStorage.setItem('esquitazos_direcciones', JSON.stringify(direcciones));
+                abrirModalDirecciones(); 
+                renderizarBotonesDireccionesGuardadas(); 
+            }
+        }
+
+        // AUTOCOMPLETADO EN VIVO DE CALLES CON OPENSTREETMAP (San Luis de la Paz)
+        const inputCalle = document.getElementById('calleNombre');
+        const contenedorSugerencias = document.getElementById('sugerenciasCalles');
+        let timeoutId;
+
+        inputCalle.addEventListener('input', function() {
+            clearTimeout(timeoutId);
+            const query = this.value.trim();
+
+            if (query.length < 3) {
+                contenedorSugerencias.classList.add('hidden');
+                return;
+            }
+
+            timeoutId = setTimeout(() => {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", San Luis de la Paz, Guanajuato")}&countrycodes=mx&limit=5`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        contenedorSugerencias.innerHTML = '';
+                        if (data.length > 0) {
+                            data.forEach(place => {
+                                const div = document.createElement('div');
+                                div.className = 'p-3 hover:bg-cafe-800 cursor-pointer text-sm text-crema-100 border-b border-cafe-700/50';
+                                const nombreLimpio = place.display_name.split(',')[0];
+                                div.innerText = nombreLimpio;
+                                
+                                div.addEventListener('click', () => {
+                                    inputCalle.value = nombreLimpio;
+                                    contenedorSugerencias.classList.add('hidden');
+                                    document.getElementById('numeroCasa').focus();
+                                });
+                                contenedorSugerencias.appendChild(div);
+                            });
+                            contenedorSugerencias.classList.remove('hidden');
+                        } else {
+                            contenedorSugerencias.classList.add('hidden');
+                        }
+                    })
+                    .catch(err => console.error("Error buscando calles:", err));
+            }, 400);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!inputCalle.contains(e.target) && !contenedorSugerencias.contains(e.target)) {
+                contenedorSugerencias.classList.add('hidden');
+            }
+        });
+
         function botonImagen(imgSrc, fallbackText, onClickAttr, isActive = false) {
             return `
                 <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98]">
@@ -244,7 +487,6 @@
             `;
         }
 
-        // BOTÓN ESPECIAL CON PALOMITA (ETIQUETA ABAJO A LA IZQUIERDA PARA LOS QUESOS)
         function botonQuesoImagen(imgSrc, fallbackText, onClickAttr, isActive = false) {
             return `
                 <button type="button" onclick="${onClickAttr}" class="w-full focus:outline-none active:scale-[0.98]">
@@ -295,18 +537,21 @@
 
                 html += `
                     <div class="bg-cafe-900 border-2 border-cafe-700 rounded-2xl overflow-hidden shadow-lg text-white transition-all duration-300 ${claseColumna}">
-                        <!-- TARJETA PRINCIPAL -->
-                        <div onclick="${isOpen ? '' : `abrirSabor('${s.id}')`}" class="${isOpen ? 'cursor-default' : 'cursor-pointer transform transition hover:scale-[1.01] active:scale-[0.99]'} relative overflow-hidden rounded-2xl group">
-                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover rounded-2xl">
+                        
+                        <!-- IMAGEN CON BOTÓN FLOTANTE SÚPER CHICO EN EL CENTRO -->
+                        <div onclick="${isOpen ? '' : `abrirSabor('${s.id}')`}" class="${isOpen ? 'cursor-default' : 'cursor-pointer transform transition hover:scale-[1.01] active:scale-[0.99]'} relative overflow-hidden rounded-2xl">
+                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover">
+                            
                             ${!isOpen ? `
-                                <div class="absolute top-2.5 right-2.5 z-10">
-                                    <span class="bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg shadow-lg border border-orange-400/50 flex items-center gap-1 animate-pulse">
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <span class="bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold py-1 px-2.5 rounded-full shadow-lg border border-orange-400/50 animate-pulse pointer-events-auto flex items-center gap-1">
                                         <span>👆</span> Toca para armar
                                     </span>
                                 </div>
                             ` : ''}
+
                             ${isOpen ? `
-                                <div class="absolute top-3 right-3">
+                                <div class="absolute top-3 right-3 z-10">
                                     <button type="button" onclick="cerrarSabor()" class="text-sm bg-black/70 hover:bg-black text-orange-200 px-3.5 py-1.5 rounded-xl font-bold transition backdrop-blur-sm border border-orange-500/30 shadow-lg">
                                         ✕ Cambiar Sabor
                                     </button>
@@ -314,7 +559,6 @@
                             ` : ''}
                         </div>
 
-                        <!-- WIZARD ACUMULATIVO EN FILA -->
                         ${isOpen ? `
                             <div class="p-6 bg-cafe-800 border-t border-cafe-700 space-y-5 animate-fade-in">
                                 ${s.id === 'mantequilla' ? renderizarMantequilla(sel) : renderizarOtrosSabores(s.id, sel, s)}
@@ -347,7 +591,6 @@
             }, 150);
         }
 
-        // FUNCIONES DE MANTEQUILLA
         function seleccionarTamano(id, tam) {
             seleccionesActuales[id].tam = tam;
             renderizarSabores();
@@ -383,7 +626,6 @@
             autoScrollActiveStep();
         }
 
-        // FUNCIONES DE OTROS SABORES
         function seleccionarTieneLimon(id, val) {
             let sel = seleccionesActuales[id];
             sel.tieneLimon = val;
@@ -417,7 +659,6 @@
             renderizarSabores();
         }
 
-        // ATAJO: TODO APARTE
         function aplicarTodoAparte(id) {
             let sel = seleccionesActuales[id];
             sel.tieneLimon = 'si';
@@ -428,7 +669,6 @@
             autoScrollActiveStep();
         }
 
-        // REINICIAR PASO AL CAMBIAR
         function reiniciarPaso(id, nivel) {
             let sel = seleccionesActuales[id];
             if (nivel === 1) {
@@ -471,11 +711,9 @@
             autoScrollActiveStep();
         }
 
-        // RENDERIZADO MANTEQUILLA
         function renderizarMantequilla(sel) {
             let html = '';
 
-            // 1. TAMAÑO
             if (!sel.tam) {
                 html += `<div id="paso-activo" class="space-y-3"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -494,7 +732,6 @@
 
             if (!sel.tam) return html;
 
-            // 2. QUESOS
             if (!sel.quesosListos) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Selecciona los quesos (Toca para quitar/poner):</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -519,7 +756,6 @@
 
             if (!sel.quesosListos) return html;
 
-            // 3. CHILE (3 opciones: 2 arriba, 3era centrada con ancho de 1 columna exacto)
             if (!sel.tipoChili) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -544,7 +780,6 @@
 
             if (!sel.tipoChili) return html;
 
-            // 4. NIVEL DE PICANTE
             if (sel.tipoChili === 'pica') {
                 if (!sel.nivelPica) {
                     html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">4️⃣ ¿Qué tan picante?</label>
@@ -570,7 +805,6 @@
                 if (!sel.nivelPica) return html;
             }
 
-            // 5. BOTÓN AGREGAR AL PEDIDO
             html += `<div id="paso-activo" class="pt-4 border-t border-cafe-700 animate-fade-in">
                 <button type="button" onclick="agregarItem('mantequilla')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2">
                     <span>🛒</span> ¡Agregar al Pedido!
@@ -580,11 +814,9 @@
             return html;
         }
 
-        // RENDERIZADO OTROS SABORES
         function renderizarOtrosSabores(id, sel, s) {
             let html = '';
 
-            // 1. TAMAÑO
             if (!sel.tam) {
                 html += `<div id="paso-activo" class="space-y-3"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">1️⃣ ¿De qué tamaño lo quieres?</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -603,7 +835,6 @@
 
             if (!sel.tam) return html;
 
-            // BOTÓN DE ATAJO: "TODO APARTE"
             if (sel.tieneLimon === null && sel.tieneChili === null) {
                 html += `<div class="pt-1 animate-fade-in">
                     <button type="button" onclick="aplicarTodoAparte('${id}')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold py-3 px-3 rounded-xl text-base shadow-md flex items-center justify-center gap-2 animate-pulse border border-orange-400/50">
@@ -612,7 +843,6 @@
                 </div>`;
             }
 
-            // 2. LIMÓN (3 opciones: 2 arriba, 3era centrada con ancho de 1 columna exacto)
             const limonListo = (sel.tieneLimon === 'no') || (sel.tieneLimon === 'si' && sel.limon);
             if (sel.tieneLimon === null) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">2️⃣ Limón:</label>
@@ -654,7 +884,6 @@
 
             if (!limonListo) return html;
 
-            // 3. CHILE
             if (sel.tieneChili === null) {
                 html += `<div id="paso-activo" class="space-y-3 pt-4 border-t border-cafe-700 animate-fade-in"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">3️⃣ ¿Lleva chilito?</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -673,7 +902,6 @@
 
             if (sel.tieneChili === null) return html;
 
-            // 4. NIVEL DE CHILE
             if (sel.tieneChili === 'si') {
                 if (!sel.chili) {
                     const opcionesChile = [
@@ -700,7 +928,6 @@
                 if (!sel.chili) return html;
             }
 
-            // 5. HUESITO (SOLO ESPINAZO GRANDE)
             if (id === 'espinazo' && sel.tam === 'grande') {
                 html += `<div class="space-y-3 pt-4 border-t border-cafe-700"><label class="block text-sm font-bold text-orange-300 uppercase tracking-wider">5️⃣ Extra opcional:</label>
                     <button type="button" onclick="toggleHuesitoEspinazo('${id}')" class="w-full py-4 px-4 rounded-xl text-base font-bold border ${sel.huesito ? 'bg-amber-600 text-white border-amber-500 shadow' : 'bg-cafe-900 text-amber-300 border-cafe-700'}">
@@ -709,7 +936,6 @@
                 </div>`;
             }
 
-            // 6. BOTÓN AGREGAR AL PEDIDO
             html += `<div id="paso-activo" class="pt-4 border-t border-cafe-700 animate-fade-in">
                 <button type="button" onclick="agregarItem('${id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2">
                     <span>🛒</span> ¡Agregar al Pedido!
@@ -824,13 +1050,14 @@
 
         function abrirModalRevision() {
             const nombre = document.getElementById('nombreCliente').value.trim();
-            const calle = document.getElementById('calleNumero').value.trim();
+            const telefono = inputTel.value.replace(/-/g, '').trim();
+            const calle = document.getElementById('calleNombre').value.trim();
+            const numero = document.getElementById('numeroCasa').value.trim();
             const colonia = document.getElementById('coloniaCliente').value.trim();
             const referencias = document.getElementById('referenciasCliente').value.trim();
-            const telefono = document.getElementById('telefonoCliente').value.trim();
 
-            if (!nombre || !calle || !colonia || !telefono) {
-                alert('¡Faltan datos! Por favor completa tu nombre, calle, colonia y número de teléfono para enviar tus Esquitazos 🌽🔥');
+            if (!nombre || !telefono || !calle || !colonia) {
+                alert('¡Faltan datos! Por favor completa tu nombre, teléfono, calle y colonia para enviar tus Esquitazos 🌽🔥');
                 const inputNombre = document.getElementById('nombreCliente');
                 inputNombre.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 inputNombre.focus();
@@ -841,14 +1068,18 @@
                 return;
             }
 
+            guardarDireccionActual();
+
             let subtotal = pedido.reduce((acc, i) => acc + i.precio, 0);
             let envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : COSTO_ENVIO;
             let total = subtotal + envio;
 
+            const direccionFinal = `${calle} ${numero}, Col. ${colonia}`;
+
             let textoResumen = `*PEDIDO ESQUITAZOS*\n`;
             textoResumen += `Nombre: ${nombre}\n`;
             textoResumen += `Teléfono: ${telefono}\n`;
-            textoResumen += `Dirección: ${calle}, Col. ${colonia}\n`;
+            textoResumen += `Dirección: ${direccionFinal}\n`;
             if(referencias) textoResumen += `Referencias: ${referencias}\n`;
             textoResumen += `\n*Mi Pedido:*\n`;
             
@@ -873,35 +1104,38 @@
 
         function enviarWhatsAppReal() {
             const nombre = document.getElementById('nombreCliente').value.trim();
-            const calle = document.getElementById('calleNumero').value.trim();
+            const telefono = inputTel.value.replace(/-/g, '').trim();
+            const calle = document.getElementById('calleNombre').value.trim();
+            const numero = document.getElementById('numeroCasa').value.trim();
             const colonia = document.getElementById('coloniaCliente').value.trim();
             const referencias = document.getElementById('referenciasCliente').value.trim();
-            const telefono = document.getElementById('telefonoCliente').value.trim();
             
             let subtotal = pedido.reduce((acc, i) => acc + i.precio, 0);
             let envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : COSTO_ENVIO;
             let total = subtotal + envio;
 
-            let mensaje = `Hola, este es mi pedido:\n\n`;
-            mensaje += `*Nombre:* ${nombre}\n`;
-            mensaje += `*Teléfono:* ${telefono}\n`;
-            mensaje += `*Dirección:* ${calle}, Col. ${colonia}\n`;
-            if(referencias) mensaje += `*Referencias:* ${referencias}\n`;
-            mensaje += `\n*Mi pedido:*\n`;
+            const direccionFinal = `${calle} ${numero}, Col. ${colonia}`;
+
+            let mensajeWhatsApp = `Hola, este es mi pedido:\n\n`;
+            mensajeWhatsApp += `*Nombre:* ${nombre}\n`;
+            mensajeWhatsApp += `*Teléfono:* ${telefono}\n`;
+            mensajeWhatsApp += `*Dirección:* ${direccionFinal}\n`;
+            if(referencias) mensajeWhatsApp += `*Referencias:* ${referencias}\n`;
+            mensajeWhatsApp += `\n*Mi pedido:*\n`;
             
             pedido.forEach((item, idx) => {
-                mensaje += `#${idx + 1} ${item.sabor} (${item.tamano}): ${item.detalles}\n`;
+                mensajeWhatsApp += `#${idx + 1} ${item.sabor} (${item.tamano}): ${item.detalles}\n`;
             });
 
             const nota = document.getElementById('notaCliente').value.trim();
             if(nota) {
-                mensaje += `\n*Nota:* ${nota}\n`;
+                mensajeWhatsApp += `\n*Nota:* ${nota}\n`;
             }
 
-            mensaje += `\n*Total: $${total}* ${subtotal >= UMBRAL_ENVIO_GRATIS ? '(¡Envío gratis aplicado!)' : ''}`;
+            mensajeWhatsApp += `\n*Total: $${total}* ${subtotal >= UMBRAL_ENVIO_GRATIS ? '(¡Envío gratis aplicado!)' : ''}`;
 
             const telefonoNegocio = "5214681208641";
-            const urlWhatsApp = `https://wa.me/${telefonoNegocio}?text=${encodeURIComponent(mensaje)}`;
+            const urlWhatsApp = `https://wa.me/${telefonoNegocio}?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
             window.open(urlWhatsApp, '_blank');
             cerrarModalRevision();
