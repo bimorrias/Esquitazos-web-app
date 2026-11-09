@@ -199,6 +199,7 @@
                 <p class="font-bold text-orange-200">📍 Ubicación exacta (opcional)</p>
                 <p class="text-sm text-crema-200">Escribe tu calle y colonia arriba. Después abre el mapa y mueve el marcador hasta tu casa. Si no puedes, continúa con tu dirección escrita.</p>
                 <button type="button" onclick="abrirMapaEntrega()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl">📍 Ubicar mi casa en el mapa</button>
+                <p id="confirmacionUbicacion" tabindex="-1" role="status" aria-live="assertive" class="hidden bg-emerald-700 text-white rounded-lg px-3 py-3 font-bold text-center">✓ ¡Ubicación exacta guardada con éxito!</p>
                 <p id="estadoUbicacion" class="text-xs text-amber-200" aria-live="polite">Todavía no has seleccionado una ubicación.</p>
                 <button id="quitarUbicacion" type="button" onclick="borrarUbicacion()" class="hidden text-xs underline text-orange-200">Quitar ubicación guardada</button>
             </div>
@@ -357,11 +358,11 @@
         const CENTRO_SAN_LUIS = [21.297, -100.524];
         function actualizarEstadoUbicacion() {
             document.getElementById('estadoUbicacion').textContent = ubicacionEntrega
-                ? '✓ Punto marcado por el cliente (pendiente de verificar en la entrega). Se adjuntará un enlace de Google Maps.'
+                ? '✓ ¡Ubicación exacta guardada con éxito! Se incluirá en tu pedido.'
                 : 'Todavía no has seleccionado una ubicación.';
             document.getElementById('quitarUbicacion').classList.toggle('hidden', !ubicacionEntrega);
         }
-        function borrarUbicacion() { ubicacionEntrega = null; referenciaBusquedaMapa = null; precisionGPSMapa = null; actualizarEstadoUbicacion(); }
+        function borrarUbicacion() { document.getElementById('confirmacionUbicacion').classList.add('hidden'); ubicacionEntrega = null; referenciaBusquedaMapa = null; precisionGPSMapa = null; actualizarEstadoUbicacion(); }
         // Evita enviar coordenadas de otra dirección si el usuario cambia los datos.
         ['calleNombre','numeroCasa','coloniaCliente'].forEach(id => {
             document.getElementById(id).addEventListener('input', borrarUbicacion);
@@ -448,7 +449,7 @@
             if (referenciaBusquedaMapa) {
                 const distancia = Math.round(distanciaMetros(punto, referenciaBusquedaMapa));
                 if (distancia > 700) {
-                    const seguir = confirm(`⚠️ El marcador está a unos ${distancia.toLocaleString('es-MX')} metros del punto encontrado para tu calle.\n\nLa búsqueda de calles puede ser inexacta.\n\nAceptar: guardar el marcador como ubicación NO VERIFICADA.\nCancelar: volver al mapa para corregirlo.\n\nSi no puedes ubicar tu casa, cierra el mapa y continúa solo con tu dirección escrita.`);
+                    const seguir = confirm(`⚠️ El marcador está a unos ${distancia.toLocaleString('es-MX')} metros del punto encontrado para tu calle.\n\nLa búsqueda de calles puede ser inexacta.\n\nAceptar: usar la ubicación que marcaste.\nCancelar: volver al mapa para corregirlo.\n\nSi no puedes ubicar tu casa, cierra el mapa y continúa solo con tu dirección escrita.`);
                     if (!seguir) return;
                 }
             }
@@ -457,6 +458,14 @@
             }
             ubicacionEntrega = {...punto, estado:'marcada_por_cliente'};
             actualizarEstadoUbicacion(); cerrarMapaEntrega();
+            mostrarConfirmacionUbicacion();
+        }
+        function mostrarConfirmacionUbicacion() {
+            const mensaje = document.getElementById('confirmacionUbicacion');
+            if (!mensaje) return;
+            mensaje.classList.remove('hidden');
+            mensaje.textContent = '✓ ¡Ubicación exacta guardada con éxito!';
+            mensaje.focus({preventScroll:true});
         }
         function enlaceUbicacion() {
             return ubicacionEntrega ? `https://www.google.com/maps?q=${ubicacionEntrega.lat},${ubicacionEntrega.lng}` : '';
@@ -1177,7 +1186,7 @@
             textoResumen += `Teléfono: ${telefono}\n`;
             textoResumen += `Dirección: ${direccionFinal}\n`;
             if(referencias) textoResumen += `Referencias: ${referencias}\n`;
-            if (ubicacionEntrega) textoResumen += `Ubicación marcada (sin verificar) en Maps: ${enlaceUbicacion()}\n`;
+            if (ubicacionEntrega) textoResumen += `Ubicación de entrega en Google Maps: ${enlaceUbicacion()}\n`;
             textoResumen += `\n*Mi Pedido:*\n`;
             
             pedido.forEach((item, idx) => {
@@ -1218,7 +1227,7 @@
             mensajeWhatsApp += `*Teléfono:* ${telefono}\n`;
             mensajeWhatsApp += `*Dirección:* ${direccionFinal}\n`;
             if(referencias) mensajeWhatsApp += `*Referencias:* ${referencias}\n`;
-            if (ubicacionEntrega) mensajeWhatsApp += `*Ubicación marcada (sin verificar):* ${enlaceUbicacion()}\n`;
+            if (ubicacionEntrega) mensajeWhatsApp += `*Ubicación de entrega (Google Maps):* ${enlaceUbicacion()}\n`;
             mensajeWhatsApp += `\n*Mi pedido:*\n`;
             
             pedido.forEach((item, idx) => {
