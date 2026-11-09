@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Esquitazos - Pedidos a Domicilio</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.css">
+    <script src="https://unpkg.com/maplibre-gl@5.9.0/dist/maplibre-gl.js"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- GOOGLE FONTS: LONDRINA SOLID BLACK & RANCHO -->
@@ -193,6 +195,14 @@
                 </datalist>
             </div>
 
+            <div class="bg-cafe-900 rounded-xl border border-orange-400/40 p-4 space-y-2">
+                <p class="font-bold text-orange-200">📍 Ubicación exacta (opcional)</p>
+                <p class="text-sm text-crema-200">Escribe tu calle y colonia arriba. Después abre el mapa y mueve el marcador hasta tu casa. Si no puedes, continúa con tu dirección escrita.</p>
+                <button type="button" onclick="abrirMapaEntrega()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl">📍 Ubicar mi casa en el mapa</button>
+                <p id="estadoUbicacion" class="text-xs text-amber-200" aria-live="polite">Todavía no has seleccionado una ubicación.</p>
+                <button id="quitarUbicacion" type="button" onclick="borrarUbicacion()" class="hidden text-xs underline text-orange-200">Quitar ubicación guardada</button>
+            </div>
+
             <div>
                 <label class="block text-sm font-bold text-orange-300 uppercase tracking-wider mb-1.5">Referencias de la casa</label>
                 <input type="text" id="referenciasCliente" autocomplete="off" placeholder="Ej. Casa verde, portón negro, frente a tiendita" class="w-full px-4 py-3 rounded-xl border border-cafe-700 bg-cafe-900 focus:ring-2 focus:ring-brand-500 focus:outline-none text-base transition text-white placeholder-gray-500 font-sans font-normal">
@@ -205,6 +215,23 @@
         </section>
 
     </main>
+
+    <!-- MAPA DE DOMICILIO: NO REQUIERE SERVIDOR PROPIO -->
+    <div id="modalMapaEntrega" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-3" role="dialog" aria-modal="true" aria-label="Confirmar domicilio en el mapa">
+        <div class="bg-cafe-800 text-crema-100 rounded-2xl p-4 w-full max-w-xl space-y-3 max-h-[95vh] overflow-y-auto">
+            <div class="flex justify-between items-center gap-2"><h3 class="font-bold text-xl">📍 Marca la entrada de tu casa</h3><button type="button" onclick="cerrarMapaEntrega()" class="text-3xl" aria-label="Cerrar">&times;</button></div>
+            <p class="text-sm">Buscaremos tu calle en San Luis de la Paz. Si no aparece exactamente, mueve el mapa y deja el marcador rojo sobre tu casa.</p>
+            <button type="button" id="buscarCalleMapa" onclick="buscarDireccionEnMapa()" class="bg-orange-600 rounded-lg px-4 py-2 font-bold w-full">🔎 Buscar mi calle y colonia</button>
+            <p id="avisoMapa" class="text-sm text-amber-200" aria-live="polite">También puedes mover el mapa manualmente.</p><p id="precisionMapa" class="text-xs text-crema-200" aria-live="polite"></p>
+            <div class="relative rounded-lg overflow-hidden" style="height:330px">
+                <div id="mapaEntrega" style="height:100%;width:100%"></div>
+                <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[500]" aria-hidden="true"><span style="font-size:37px;filter:drop-shadow(0 2px 2px #333);transform:translateY(-17px)">📍</span></div>
+            </div>
+            <button type="button" onclick="usarUbicacionActualMapa()" class="w-full bg-cafe-900 border border-cafe-700 rounded-lg py-2">📱 Usar mi ubicación actual (solo si estoy en el domicilio)</button>
+            <button type="button" onclick="confirmarUbicacionMapa()" class="w-full bg-emerald-600 rounded-lg py-3 font-bold">✓ Confirmar ubicación de entrega</button>
+            <p class="text-xs text-crema-200">Mapa © OpenFreeMap / OpenStreetMap contributors. La ubicación es opcional y se incluirá en el WhatsApp del pedido. El negocio puede confirmar domicilios sin marcador por teléfono.</p>
+        </div>
+    </div>
 
     <!-- MODAL ADMINISTRAR / BORRAR DIRECCIONES -->
     <div id="modalDirecciones" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -321,6 +348,120 @@
             renderizarBotonesDireccionesGuardadas();
         });
 
+        // Coordenadas opcionales. Se guardan por domicilio y se envían como enlace de Maps.
+        let ubicacionEntrega = null;
+        let mapaEntrega = null;
+        let referenciaBusquedaMapa = null;
+        let precisionGPSMapa = null;
+        let origenMapa = "manual";
+        const CENTRO_SAN_LUIS = [21.297, -100.524];
+        function actualizarEstadoUbicacion() {
+            document.getElementById('estadoUbicacion').textContent = ubicacionEntrega
+                ? '✓ Punto marcado por el cliente (pendiente de verificar en la entrega). Se adjuntará un enlace de Google Maps.'
+                : 'Todavía no has seleccionado una ubicación.';
+            document.getElementById('quitarUbicacion').classList.toggle('hidden', !ubicacionEntrega);
+        }
+        function borrarUbicacion() { ubicacionEntrega = null; referenciaBusquedaMapa = null; precisionGPSMapa = null; actualizarEstadoUbicacion(); }
+        // Evita enviar coordenadas de otra dirección si el usuario cambia los datos.
+        ['calleNombre','numeroCasa','coloniaCliente'].forEach(id => {
+            document.getElementById(id).addEventListener('input', borrarUbicacion);
+        });
+        function abrirMapaEntrega() {
+            const modal = document.getElementById('modalMapaEntrega');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            if (!window.maplibregl) { document.getElementById('avisoMapa').textContent = 'No se pudo cargar el mapa. Revisa tu conexión a internet.'; return; }
+            if (!mapaEntrega) {
+                mapaEntrega = new maplibregl.Map({
+                    container: 'mapaEntrega',
+                    style: 'https://tiles.openfreemap.org/styles/liberty',
+                    center: [CENTRO_SAN_LUIS[1], CENTRO_SAN_LUIS[0]],
+                    zoom: 15
+                });
+                mapaEntrega.addControl(new maplibregl.NavigationControl({showCompass:false}), 'top-left');
+                mapaEntrega.on('error', () => {
+                    document.getElementById('avisoMapa').textContent = 'No se pudo cargar alguna parte del mapa. Comprueba tu conexión.';
+                });
+            }
+            if (ubicacionEntrega) mapaEntrega.jumpTo({center:[ubicacionEntrega.lng, ubicacionEntrega.lat],zoom:18});
+            setTimeout(() => mapaEntrega.resize(), 150);
+            if (!ubicacionEntrega && document.getElementById('calleNombre').value.trim()) buscarDireccionEnMapa();
+        }
+        function cerrarMapaEntrega() {
+            const modal = document.getElementById('modalMapaEntrega');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        }
+        async function buscarDireccionEnMapa() {
+            if (!mapaEntrega) return;
+            const calle = document.getElementById('calleNombre').value.trim();
+            const colonia = document.getElementById('coloniaCliente').value.trim();
+            const aviso = document.getElementById('avisoMapa');
+            if (!calle) { aviso.textContent = 'Escribe primero tu calle. También puedes ubicarte manualmente.'; return; }
+            const boton = document.getElementById('buscarCalleMapa'); boton.disabled = true;
+            aviso.textContent = 'Buscando la calle…'; referenciaBusquedaMapa = null;
+            try {
+                // Consulta puntual, nunca en cada pulsación. Nominatim público: uso de prueba, no producción masiva.
+                const q = [calle, colonia, 'San Luis de la Paz', 'Guanajuato', 'México'].filter(Boolean).join(', ');
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' + encodeURIComponent(q);
+                const resp = await fetch(url, {headers:{'Accept':'application/json'}});
+                if (!resp.ok) throw Error('Servicio no disponible');
+                const datos = await resp.json();
+                if (datos.length) {
+                    referenciaBusquedaMapa = {lat:Number(datos[0].lat),lng:Number(datos[0].lon)}; origenMapa = 'busqueda';
+                    mapaEntrega.flyTo({center:[referenciaBusquedaMapa.lng, referenciaBusquedaMapa.lat], zoom:17});
+                    aviso.textContent = 'Encontramos una zona aproximada. Mueve el mapa para colocar el marcador sobre tu casa.';
+                } else {
+                    aviso.textContent = 'No encontramos esa calle. Mueve el mapa manualmente hasta tu casa.';
+                }
+            } catch(e) { aviso.textContent = 'La búsqueda no está disponible. Puedes ubicar tu casa moviendo el mapa.'; }
+            finally { boton.disabled = false; }
+        }
+        function distanciaMetros(a,b) {
+            const r = Math.PI / 180, dlat=(b.lat-a.lat)*r, dlng=(b.lng-a.lng)*r;
+            const h=Math.sin(dlat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dlng/2)**2;
+            return 6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+        }
+        function usarUbicacionActualMapa() {
+            const aviso = document.getElementById('avisoMapa');
+            const precision = document.getElementById('precisionMapa');
+            if (!navigator.geolocation) { aviso.textContent = 'Este dispositivo no permite obtener la ubicación.'; return; }
+            aviso.textContent = 'Solicitando una ubicación nueva…'; precision.textContent = '';
+            navigator.geolocation.getCurrentPosition(
+                p => {
+                    const lat=p.coords.latitude, lng=p.coords.longitude;
+                    precisionGPSMapa = Math.round(p.coords.accuracy);
+                    origenMapa = 'gps';
+                    if (!Number.isFinite(lat)||!Number.isFinite(lng)) { aviso.textContent='El dispositivo devolvió coordenadas inválidas.'; return; }
+                    mapaEntrega.flyTo({center:[lng,lat], zoom: precisionGPSMapa > 500 ? 15 : 18});
+                    precision.textContent = `Precisión estimada por tu dispositivo: ±${precisionGPSMapa.toLocaleString('es-MX')} metros.`;
+                    aviso.textContent = precisionGPSMapa > 200
+                        ? '⚠️ Esta ubicación es poco precisa. En computadoras es habitual. Mueve el mapa hasta tu casa antes de confirmar.'
+                        : 'Ubicación detectada. Comprueba que el marcador esté sobre la entrada de tu casa.';
+                },
+                e => { aviso.textContent = e.code === 1 ? 'No se autorizó el acceso a ubicación. Puedes mover el mapa manualmente.' : 'No se pudo obtener una ubicación reciente. Puedes mover el mapa manualmente.'; },
+                {enableHighAccuracy:true, timeout:18000, maximumAge:0}
+            );
+        }
+        function confirmarUbicacionMapa() {
+            if (!mapaEntrega) return;
+            const c = mapaEntrega.getCenter();
+            const punto = {lat:Number(c.lat.toFixed(6)),lng:Number(c.lng.toFixed(6))};
+            if (referenciaBusquedaMapa) {
+                const distancia = Math.round(distanciaMetros(punto, referenciaBusquedaMapa));
+                if (distancia > 700) {
+                    const seguir = confirm(`⚠️ El marcador está a unos ${distancia.toLocaleString('es-MX')} metros del punto encontrado para tu calle.\n\nLa búsqueda de calles puede ser inexacta.\n\nAceptar: guardar el marcador como ubicación NO VERIFICADA.\nCancelar: volver al mapa para corregirlo.\n\nSi no puedes ubicar tu casa, cierra el mapa y continúa solo con tu dirección escrita.`);
+                    if (!seguir) return;
+                }
+            }
+            if (precisionGPSMapa > 200 && origenMapa === 'gps') {
+                if (!confirm(`Tu dispositivo indicó una precisión aproximada de ±${precisionGPSMapa} m. ¿Ya revisaste y corregiste el marcador hasta la entrada de tu casa?`)) return;
+            }
+            ubicacionEntrega = {...punto, estado:'marcada_por_cliente'};
+            actualizarEstadoUbicacion(); cerrarMapaEntrega();
+        }
+        function enlaceUbicacion() {
+            return ubicacionEntrega ? `https://www.google.com/maps?q=${ubicacionEntrega.lat},${ubicacionEntrega.lng}` : '';
+        }
+
         function guardarDireccionActual() {
             const nombre = document.getElementById('nombreCliente').value.trim();
             const calle = document.getElementById('calleNombre').value.trim();
@@ -339,9 +480,9 @@
             
             const indexExistente = direcciones.findIndex(d => d.calle === calle && d.numero === numero && d.colonia === colonia);
             if (indexExistente !== -1) {
-                direcciones[indexExistente] = { nombre, calle, numero, colonia, referencias, etiqueta };
+                direcciones[indexExistente] = { nombre, calle, numero, colonia, referencias, etiqueta, ubicacion: ubicacionEntrega };
             } else {
-                direcciones.push({ nombre, calle, numero, colonia, referencias, etiqueta });
+                direcciones.push({ nombre, calle, numero, colonia, referencias, etiqueta, ubicacion: ubicacionEntrega });
             }
             localStorage.setItem('esquitazos_direcciones', JSON.stringify(direcciones));
         }
@@ -371,6 +512,7 @@
                     document.getElementById('numeroCasa').value = dir.numero || '';
                     document.getElementById('coloniaCliente').value = dir.colonia;
                     document.getElementById('referenciasCliente').value = dir.referencias || '';
+                    ubicacionEntrega = dir.ubicacion || null; actualizarEstadoUbicacion();
 
                     const alerta = document.getElementById('alertaDireccion');
                     alerta.classList.remove('hidden');
@@ -1035,6 +1177,7 @@
             textoResumen += `Teléfono: ${telefono}\n`;
             textoResumen += `Dirección: ${direccionFinal}\n`;
             if(referencias) textoResumen += `Referencias: ${referencias}\n`;
+            if (ubicacionEntrega) textoResumen += `Ubicación marcada (sin verificar) en Maps: ${enlaceUbicacion()}\n`;
             textoResumen += `\n*Mi Pedido:*\n`;
             
             pedido.forEach((item, idx) => {
@@ -1075,6 +1218,7 @@
             mensajeWhatsApp += `*Teléfono:* ${telefono}\n`;
             mensajeWhatsApp += `*Dirección:* ${direccionFinal}\n`;
             if(referencias) mensajeWhatsApp += `*Referencias:* ${referencias}\n`;
+            if (ubicacionEntrega) mensajeWhatsApp += `*Ubicación marcada (sin verificar):* ${enlaceUbicacion()}\n`;
             mensajeWhatsApp += `\n*Mi pedido:*\n`;
             
             pedido.forEach((item, idx) => {
