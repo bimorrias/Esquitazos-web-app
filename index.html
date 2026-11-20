@@ -62,6 +62,8 @@
             background-position: center;
             background-size: cover;
         }
+        .sku-agotado img { filter: brightness(.85); }
+        .sku-agotado { pointer-events: none; user-select: none; }
     </style>
 </head>
 <body class="bg-[#5a2d1b] text-crema-100 font-sans antialiased pb-32 tracking-wide">
@@ -77,7 +79,7 @@
     </header>
 
     <!-- BARRA DE ENVÍO GRATIS STICKY -->
-    <div class="sticky top-[69px] z-30 bg-[#5a2d1b]/95 backdrop-blur-md shadow-sm border-b border-cafe-700 px-4 py-3 transition-all">
+    <div id="barraEnvioGratis" class="sticky top-[69px] z-30 bg-[#5a2d1b]/95 backdrop-blur-md shadow-sm border-b border-cafe-700 px-4 py-3 transition-all">
         <div class="max-w-xl mx-auto">
             <div class="p-3.5 bg-cafe-800 border border-cafe-700 rounded-2xl text-center shadow-md">
                 <p id="textoEnvioGratis" class="text-base font-bold text-amber-300 tracking-wider">¡Agrega $220 para envío gratis!</p>
@@ -88,7 +90,13 @@
         </div>
     </div>
 
-    <main class="max-w-xl mx-auto p-4 space-y-6">
+    <section id="pantallaAgotados" class="hidden max-w-xl mx-auto p-4 py-8 text-center">
+        <img src="img/agotado_todo.webp" alt="Por hoy se nos agotó todo. ¡Te esperamos mañana!"
+             class="w-full max-w-md aspect-square object-contain mx-auto rounded-2xl shadow-xl"
+             onerror="this.style.display='none';document.getElementById('textoAgotadoFallback').classList.remove('hidden')">
+        <p id="textoAgotadoFallback" class="hidden text-2xl text-white font-bold p-8">¡Por hoy se nos agotó todo! 🌽 ¡Te esperamos mañana!</p>
+    </section>
+    <main id="contenidoPedidos" class="max-w-xl mx-auto p-4 space-y-6">
 
         <!-- 1. ESCOGE TUS ESQUITES -->
         <section class="space-y-3">
@@ -252,7 +260,7 @@
     </div>
 
     <!-- BOTÓN FLOTANTE DE ENVIAR -->
-    <div class="fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
+    <div id="barraEnviar" class="fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
         <div class="max-w-xl mx-auto">
             <button type="button" onclick="abrirModalRevision()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xl tracking-wider">
                 <span>📱</span> Revisar Pedido y Enviar por WhatsApp
@@ -291,6 +299,48 @@
         }
         window.scrollTo(0, 0);
 
+        // Copia aquí los datos PÚBLICOS del proyecto; NUNCA una secret/service_role key.
+        const SUPABASE_URL = 'https://bwbqpdrwbcuqkgdfuvqf.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_JoLEHsPf3cHv2mN9u3fuzQ_Z6ktl1W3';
+        const supabaseListo = SUPABASE_URL.startsWith('https://') && SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_');
+        let agotadoTodoHoy = false;
+        let estadoDisponibilidadCargado = false;
+        let agotadosHoy = new Set();
+        async function consultarDisponibilidad() {
+            if (!supabaseListo) return;
+            const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/rpc/consultar_disponibilidad`, {
+                method: 'POST',
+                headers: {'apikey': SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json'},
+                body: '{}', cache: 'no-store'
+            });
+            if (!respuesta.ok) throw new Error('No se pudo consultar la disponibilidad');
+            const datos = await respuesta.json();
+            agotadoTodoHoy = datos.agotado_todo === true;
+            agotadosHoy = new Set((datos.productos || []).filter(p => !p.disponible).map(p => p.id));
+            estadoDisponibilidadCargado = true;
+            const agotadoEfectivo = agotadoTodoHoy || saboresData.every(s => agotadosHoy.has(s.id) || !s.disponible);
+            document.getElementById('pantallaAgotados').classList.toggle('hidden', !agotadoEfectivo);
+            document.getElementById('contenidoPedidos').classList.toggle('hidden', agotadoEfectivo);
+            document.getElementById('barraEnviar').classList.toggle('hidden', agotadoEfectivo);
+            document.getElementById('barraEnvioGratis').classList.toggle('hidden', agotadoEfectivo);
+            if (agotadoEfectivo) document.getElementById('modalRevision').classList.add('hidden');
+            const agotadosAntes = pedido.length;
+            pedido = pedido.filter(i => {
+                const s = saboresData.find(x => x.nombre === i.sabor);
+                return s && s.disponible && !agotadosHoy.has(s.id) && !agotadoTodoHoy;
+            });
+            if (pedido.length !== agotadosAntes) renderizarPedido();
+            if (saborAbierto && agotadosHoy.has(saborAbierto)) saborAbierto = null;
+            renderizarSabores();
+        }
+        async function actualizarDisponibilidadSegura() {
+            try { await consultarDisponibilidad(); }
+            catch (e) {
+                estadoDisponibilidadCargado = false;
+                document.getElementById('barraEnviar').classList.add('hidden');
+                document.getElementById('contenedorSabores').innerHTML = '<p class="col-span-2 text-center text-amber-200 p-5">No pudimos comprobar la disponibilidad. Revisa tu conexión e intenta recargar la página.</p>';
+            }
+        }
         const estaAbierto = true;
         let pedido = [];
         const COSTO_ENVIO = 15;
@@ -622,13 +672,13 @@
                 const isOpen = saborAbierto === s.id;
                 if (saborAbierto && !isOpen) return; 
 
-                if (!s.disponible) {
+                if (!s.disponible || agotadosHoy.has(s.id) || agotadoTodoHoy || (supabaseListo && !estadoDisponibilidadCargado)) {
                     html += `
-                        <div class="relative rounded-2xl overflow-hidden opacity-60 cursor-not-allowed shadow-md col-span-1">
-                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover rounded-2xl grayscale" onerror="this.src='img/${s.id}.png'">
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center p-2 text-center">
+                        <div class="sku-agotado relative rounded-2xl overflow-hidden cursor-not-allowed shadow-md col-span-1">
+                            <img src="${s.img}" alt="${s.nombre}" class="w-full h-auto object-cover rounded-2xl" onerror="this.src='img/${s.id}.png'">
+                            <div class="absolute inset-0 bg-black/25 flex items-center justify-center p-2 text-center">
                                 <span class="bg-gray-900/90 text-amber-300 text-xs font-bold px-2 py-1 rounded-xl shadow-lg border border-amber-500/30">
-                                    🔒 ${s.notaDisponibilidad}
+                                    ${agotadosHoy.has(s.id) || agotadoTodoHoy ? 'AGOTADO POR EL DÍA DE HOY' : (supabaseListo && !estadoDisponibilidadCargado ? 'CONSULTANDO DISPONIBILIDAD' : s.notaDisponibilidad)}
                                 </span>
                             </div>
                         </div>
@@ -1050,6 +1100,7 @@
         }
 
         function agregarItem(id) {
+            if ((supabaseListo && !estadoDisponibilidadCargado) || agotadoTodoHoy || agotadosHoy.has(id)) return;
             const saborObj = saboresData.find(s => s.id === id);
             const sel = seleccionesActuales[id];
             const tam = sel.tam;
@@ -1152,7 +1203,12 @@
             document.getElementById('totalTxt').innerText = `$${total}`;
         }
 
-        function abrirModalRevision() {
+        async function abrirModalRevision() {
+            if (supabaseListo) {
+                try { await consultarDisponibilidad(); }
+                catch (_) { alert('No se pudo verificar la disponibilidad. Inténtalo de nuevo.'); return; }
+                if (agotadoTodoHoy || !pedido.length) { alert('Hay productos agotados. Revisa tu pedido.'); return; }
+            }
             const nombre = document.getElementById('nombreCliente').value.trim();
             const telefono = inputTel.value.replace(/-/g, '').trim();
             const calle = document.getElementById('calleNombre').value.trim();
@@ -1208,7 +1264,12 @@
             document.getElementById('modalRevision').classList.add('hidden');
         }
 
-        function enviarWhatsAppReal() {
+        async function enviarWhatsAppReal() {
+            if (supabaseListo) {
+                try { await consultarDisponibilidad(); }
+                catch (_) { alert('No se pudo verificar la disponibilidad. Inténtalo de nuevo.'); return; }
+                if (agotadoTodoHoy || !pedido.length) { alert('Hay productos agotados. Revisa tu pedido.'); return; }
+            }
             const nombre = document.getElementById('nombreCliente').value.trim();
             const telefono = inputTel.value.replace(/-/g, '').trim();
             const calle = document.getElementById('calleNombre').value.trim();
@@ -1255,6 +1316,13 @@
         }
 
         renderizarSabores();
+        if (supabaseListo) {
+            document.getElementById('barraEnviar').classList.add('hidden');
+            actualizarDisponibilidadSegura().then(() => {
+                if (estadoDisponibilidadCargado && !agotadoTodoHoy) document.getElementById('barraEnviar').classList.remove('hidden');
+            });
+            setInterval(actualizarDisponibilidadSegura, 30000);
+        }
     </script>
 </body>
 </html>
