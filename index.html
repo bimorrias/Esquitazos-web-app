@@ -79,7 +79,7 @@
     </header>
 
     <!-- BARRA DE ENVÍO GRATIS STICKY -->
-    <div id="barraEnvioGratis" class="sticky top-[69px] z-30 bg-[#5a2d1b]/95 backdrop-blur-md shadow-sm border-b border-cafe-700 px-4 py-3 transition-all">
+    <div id="barraEnvioGratis" class="hidden sticky top-[69px] z-30 bg-[#5a2d1b]/95 backdrop-blur-md shadow-sm border-b border-cafe-700 px-4 py-3 transition-all">
         <div class="max-w-xl mx-auto">
             <div class="p-3.5 bg-cafe-800 border border-cafe-700 rounded-2xl text-center shadow-md">
                 <p id="textoEnvioGratis" class="text-base font-bold text-amber-300 tracking-wider">¡Agrega $220 para envío gratis!</p>
@@ -90,13 +90,27 @@
         </div>
     </div>
 
+    <section id="pantallaCerrado" class="hidden max-w-xl mx-auto p-4 py-8 text-center" aria-live="polite">
+        <div class="relative overflow-hidden bg-cafe-800 border border-cafe-700 rounded-3xl shadow-xl p-6 sm:p-8">
+            <div class="relative z-10 space-y-5">
+                <div class="text-4xl text-orange-200" aria-hidden="true">◷</div>
+                <h2 class="text-3xl font-black text-white">Por el momento estamos cerrados</h2>
+                <p class="text-lg text-crema-100">Nuestro servicio a domicilio está disponible todos los días en el siguiente horario:</p>
+                <div class="bg-cafe-900/70 border border-cafe-700 rounded-2xl py-5 px-3">
+                    <p class="text-3xl text-amber-300 font-black">6:00 PM – 9:40 PM</p>
+                    <p class="text-white text-lg mt-1">Lunes a domingo</p>
+                </div>
+                <p class="text-xl text-orange-200">¡Te esperamos!</p>
+            </div>
+        </div>
+    </section>
     <section id="pantallaAgotados" class="hidden max-w-xl mx-auto p-4 py-8 text-center">
         <img src="img/agotado_todo.webp" alt="Por hoy se nos agotó todo. ¡Te esperamos mañana!"
              class="w-full max-w-md aspect-square object-contain mx-auto rounded-2xl shadow-xl"
              onerror="this.style.display='none';document.getElementById('textoAgotadoFallback').classList.remove('hidden')">
         <p id="textoAgotadoFallback" class="hidden text-2xl text-white font-bold p-8">¡Por hoy se nos agotó todo! 🌽 ¡Te esperamos mañana!</p>
     </section>
-    <main id="contenidoPedidos" class="max-w-xl mx-auto p-4 space-y-6">
+    <main id="contenidoPedidos" class="hidden max-w-xl mx-auto p-4 space-y-6">
 
         <!-- 1. ESCOGE TUS ESQUITES -->
         <section class="space-y-3">
@@ -260,7 +274,7 @@
     </div>
 
     <!-- BOTÓN FLOTANTE DE ENVIAR -->
-    <div id="barraEnviar" class="fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
+    <div id="barraEnviar" class="hidden fixed bottom-0 left-0 right-0 bg-[#5a2d1b]/95 backdrop-blur-md border-t border-cafe-700 p-4 shadow-lg z-30 transition-all">
         <div class="max-w-xl mx-auto">
             <button type="button" onclick="abrirModalRevision()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-xl tracking-wider">
                 <span>📱</span> Revisar Pedido y Enviar por WhatsApp
@@ -318,12 +332,7 @@
             agotadoTodoHoy = datos.agotado_todo === true;
             agotadosHoy = new Set((datos.productos || []).filter(p => !p.disponible).map(p => p.id));
             estadoDisponibilidadCargado = true;
-            const agotadoEfectivo = agotadoTodoHoy || saboresData.every(s => agotadosHoy.has(s.id) || !s.disponible);
-            document.getElementById('pantallaAgotados').classList.toggle('hidden', !agotadoEfectivo);
-            document.getElementById('contenidoPedidos').classList.toggle('hidden', agotadoEfectivo);
-            document.getElementById('barraEnviar').classList.toggle('hidden', agotadoEfectivo);
-            document.getElementById('barraEnvioGratis').classList.toggle('hidden', agotadoEfectivo);
-            if (agotadoEfectivo) document.getElementById('modalRevision').classList.add('hidden');
+            actualizarPantallaServicio();
             const agotadosAntes = pedido.length;
             pedido = pedido.filter(i => {
                 const s = saboresData.find(x => x.nombre === i.sabor);
@@ -337,11 +346,40 @@
             try { await consultarDisponibilidad(); }
             catch (e) {
                 estadoDisponibilidadCargado = false;
-                document.getElementById('barraEnviar').classList.add('hidden');
+                actualizarPantallaServicio();
                 document.getElementById('contenedorSabores').innerHTML = '<p class="col-span-2 text-center text-amber-200 p-5">No pudimos comprobar la disponibilidad. Revisa tu conexión e intenta recargar la página.</p>';
             }
         }
-        const estaAbierto = true;
+        const relojServicio = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        });
+        function estaAbierto(fecha = new Date()) {
+            const partes = relojServicio.formatToParts(fecha);
+            const minutos = Number(partes.find(p => p.type === 'hour').value) * 60
+                + Number(partes.find(p => p.type === 'minute').value);
+            return minutos >= 18 * 60 && minutos < 21 * 60 + 40;
+        }
+        function actualizarPantallaServicio() {
+            const abierto = estaAbierto();
+            const agotado = estadoDisponibilidadCargado && (agotadoTodoHoy || saboresData.every(s => agotadosHoy.has(s.id) || !s.disponible));
+            const mostrarPedidos = abierto && !agotado;
+            document.getElementById('pantallaCerrado').classList.toggle('hidden', abierto);
+            document.getElementById('pantallaAgotados').classList.toggle('hidden', !abierto || !agotado);
+            document.getElementById('contenidoPedidos').classList.toggle('hidden', !mostrarPedidos);
+            document.getElementById('barraEnvioGratis').classList.toggle('hidden', !mostrarPedidos);
+            document.getElementById('barraEnviar').classList.toggle('hidden', !mostrarPedidos || (supabaseListo && !estadoDisponibilidadCargado));
+            if (!mostrarPedidos) {
+                cerrarModalRevision();
+                cerrarMapaEntrega();
+                cerrarModalDirecciones();
+            }
+        }
+        function verificarHorarioServicio() {
+            if (estaAbierto()) return true;
+            actualizarPantallaServicio();
+            window.scrollTo(0, 0);
+            return false;
+        }
         let pedido = [];
         const COSTO_ENVIO = 15;
         const UMBRAL_ENVIO_GRATIS = 220;
@@ -1204,11 +1242,13 @@
         }
 
         async function abrirModalRevision() {
+            if (!verificarHorarioServicio()) return;
             if (supabaseListo) {
                 try { await consultarDisponibilidad(); }
                 catch (_) { alert('No se pudo verificar la disponibilidad. Inténtalo de nuevo.'); return; }
                 if (agotadoTodoHoy || !pedido.length) { alert('Hay productos agotados. Revisa tu pedido.'); return; }
             }
+            if (!verificarHorarioServicio()) return;
             const nombre = document.getElementById('nombreCliente').value.trim();
             const telefono = inputTel.value.replace(/-/g, '').trim();
             const calle = document.getElementById('calleNombre').value.trim();
@@ -1265,11 +1305,13 @@
         }
 
         async function enviarWhatsAppReal() {
+            if (!verificarHorarioServicio()) return;
             if (supabaseListo) {
                 try { await consultarDisponibilidad(); }
                 catch (_) { alert('No se pudo verificar la disponibilidad. Inténtalo de nuevo.'); return; }
                 if (agotadoTodoHoy || !pedido.length) { alert('Hay productos agotados. Revisa tu pedido.'); return; }
             }
+            if (!verificarHorarioServicio()) return;
             const nombre = document.getElementById('nombreCliente').value.trim();
             const telefono = inputTel.value.replace(/-/g, '').trim();
             const calle = document.getElementById('calleNombre').value.trim();
@@ -1304,7 +1346,7 @@
             mensajeWhatsApp += `Envío: ${envio === 0 ? 'GRATIS' : '$' + envio}\n`;
             mensajeWhatsApp += `*Total a Pagar: $${total}* ${subtotal >= UMBRAL_ENVIO_GRATIS ? '(¡Envío gratis aplicado!)' : ''}`;
 
-            const telefonoNegocio = "5214681208641";
+            const telefonoNegocio = "524428177824";
             const urlWhatsApp = `https://wa.me/${telefonoNegocio}?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
             window.open(urlWhatsApp, '_blank');
@@ -1316,11 +1358,12 @@
         }
 
         renderizarSabores();
+        actualizarPantallaServicio();
+        setInterval(actualizarPantallaServicio, 1000);
+        document.addEventListener('visibilitychange', actualizarPantallaServicio);
         if (supabaseListo) {
             document.getElementById('barraEnviar').classList.add('hidden');
-            actualizarDisponibilidadSegura().then(() => {
-                if (estadoDisponibilidadCargado && !agotadoTodoHoy) document.getElementById('barraEnviar').classList.remove('hidden');
-            });
+            actualizarDisponibilidadSegura();
             setInterval(actualizarDisponibilidadSegura, 30000);
         }
     </script>
